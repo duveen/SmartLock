@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_height="30dp"
+    android:layout_margin="10dp">
+
+    <ImageView
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:scaleType="fitXY"
+        android:src="@drawable/drawer_menu_shakey_icon" />
+
+    <TextView
+        android:id="@+id/menu_shakey_name_line"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:text="Shakey"
+        android:layout_weight="1"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginLeft="10dp"
+        android:gravity="center_vertical"
+        android:visibility="visible" />
+
+</LinearLayout>

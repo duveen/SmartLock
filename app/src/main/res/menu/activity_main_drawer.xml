@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_notice"
+            android:title="공지사항" />
+
+        <item
+            android:id="@+id/nav_location"
+            android:title="위치 별 보기" />
+
+        <item
+            android:id="@+id/nav_money"
+            android:title="금액 별 보기" />
+
+        <item
+            android:id="@+id/nav_search"
+            android:title="검색하기" />
+
+        <item android:title="기타">
+            <menu>
+                <item
+                    android:id="@+id/nav_kakao"
+                    android:title="문의하기" />
+            </menu>
+        </item>
+    </group>
+</menu>

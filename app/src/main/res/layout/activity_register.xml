@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_register"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/background"
+    android:orientation="vertical"
+    tools:context="kr.o3selab.smartlock.activities.RegisterActivity">
+
+    <TextSwitcher
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:id="@+id/register_text_switcher"
+        android:layout_weight="1">
+
+    </TextSwitcher>
+
+    <FrameLayout
+        android:id="@+id/register_naver_login"
+        android:layout_width="match_parent"
+        android:layout_height="70dp"
+        android:layout_weight="0"
+        android:background="@drawable/naver"
+        android:visibility="gone">
+
+    </FrameLayout>
+
+</LinearLayout>
