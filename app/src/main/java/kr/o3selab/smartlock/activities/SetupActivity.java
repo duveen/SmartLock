@@ -10,18 +10,13 @@ import android.widget.Switch;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import kr.o3selab.smartlock.dialog.ResponsivenessDialog;
-import kr.o3selab.smartlock.common.AppSettings;
+import butterknife.ButterKnife;
 import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.common.AppSettings;
+import kr.o3selab.smartlock.layouts.ResponsivenessDialog;
 
 public class SetupActivity extends BaseActivity {
 
-    public static final String TAG = "SetupActivity";
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
 
 
     @Override
@@ -29,7 +24,9 @@ public class SetupActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setup);
 
-        ImageView undoButton = (ImageView) findViewById(R.id.activity_setup_ic_undo);
+        ButterKnife.bind(this);
+
+        ImageView undoButton = (ImageView) findViewById(R.id.setting_back);
         undoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -57,15 +54,14 @@ public class SetupActivity extends BaseActivity {
 
         Switch togglebtn = (Switch) findViewById(R.id.noti_toggle);
         togglebtn.setChecked(AppSettings.getNotiSetting());
-        togglebtn.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener(){
+        togglebtn.setOnCheckedChangeListener(new Switch.OnCheckedChangeListener() {
 
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b){
-                    AppSettings.setSettingsValue(AppSettings.SETTINGS_NOTI,b,0,null);
-                }
-                else{
-                    AppSettings.setSettingsValue(AppSettings.SETTINGS_NOTI,b,0,null);
+                if (b) {
+                    AppSettings.setSettingsValue(AppSettings.SETTINGS_NOTI, b, 0, null);
+                } else {
+                    AppSettings.setSettingsValue(AppSettings.SETTINGS_NOTI, b, 0, null);
                 }
             }
         });

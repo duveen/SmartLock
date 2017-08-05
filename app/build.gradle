@@ -30,21 +30,25 @@ dependencies {
     testCompile 'junit:junit:4.12'
 
     // Design Library
+    compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'com.android.support:design:25.3.1'
-
-    // NaverLoginLibrary
-    compile files('libs/naver_4.1.4.jar')
+    compile 'com.android.support:support-v4:25.3.1'
+    compile 'com.android.support:support-vector-drawable:25.3.1'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    compile 'com.beardedhen:androidbootstrap:2.3.1'
 
     // TedPermissionLibrary
     compile 'com.github.ParkSangGwon:TedPermission:v1.0.12'
 
-    // Glide Library
-    compile 'com.github.bumptech.glide:glide:3.7.0'
-    compile 'com.google.android.gms:play-services-appindexing:9.8.0'
-
     compile 'com.google.firebase:firebase-database:10.2.1'
     compile 'com.google.firebase:firebase-auth:10.2.1'
     compile 'com.google.firebase:firebase-messaging:10.2.1'
+
+    compile 'com.google.android.gms:play-services-auth:10.2.1'
+
+    compile 'com.jakewharton:butterknife:8.7.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.7.0'
 }
 
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.jakewharton.butterknife'

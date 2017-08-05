@@ -1,4 +1,4 @@
-package kr.o3selab.smartlock.dialog;
+package kr.o3selab.smartlock.layouts;
 
 import android.app.DialogFragment;
 import android.os.Bundle;

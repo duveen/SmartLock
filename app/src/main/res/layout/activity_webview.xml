@@ -1,32 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="@color/background">
+        android:background="@color/colorPrimary">
 
         <ImageView
-            android:id="@+id/activity_info_ic_undo"
+            android:id="@+id/shakey_info_undo"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_margin="10dp"
             android:src="@drawable/ic_undo"
-            android:tint="#ffffff"
-            android:layout_margin="10dp" />
-
+            android:tint="#ffffff" />
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="공지사항"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="#ffffff"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:id="@+id/textView" />
+            android:text="공지사항"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
     </FrameLayout>
 
@@ -35,6 +34,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        />
+        android:layout_alignParentTop="true" />
 </LinearLayout>

@@ -1,64 +1,65 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="@color/background">
+        android:background="@color/colorPrimary">
 
         <ImageView
             android:id="@+id/activity_main_ic_menu"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_margin="10dp"
             android:src="@drawable/ic_menu_black"
-            android:tint="#ffffff"
-            android:layout_margin="10dp" />
+            android:tint="#ffffff" />
 
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Shakey"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="#ffffff"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:id="@+id/textView" />
+            android:text="Shakey"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
     </FrameLayout>
+
     <TextView
-        android:text="연결된 Shakey 없음"
+        android:id="@+id/fragment_shakey_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/fragment_shakey_name"
         android:layout_marginTop="30dp"
-        android:gravity="center" />
+        android:gravity="center"
+        android:text="연결된 Shakey 없음" />
 
     <ImageView
         android:id="@+id/fragment_shakey_info"
         android:layout_width="40dp"
         android:layout_height="40dp"
-        android:src="@drawable/ic_info_black"
         android:layout_gravity="right"
-        android:tint="@color/gray4"
         android:layout_margin="20dp"
-        android:padding="5dp" />
+        android:padding="5dp"
+        android:src="@drawable/ic_info_black"
+        android:tint="@color/grey_400" />
 
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="150dp"
-        android:src="@drawable/shakey_background"/>
+        android:src="@drawable/shakey_background" />
 
     <TextView
         android:id="@+id/fragment_shakey_lastopen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="25dp"
-        android:text="마지막으로 연 시간 : 없음"
-        android:gravity="center"/>
+        android:gravity="center"
+        android:text="마지막으로 연 시간 : 없음" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -76,22 +77,22 @@
                 android:id="@+id/fragment_shakey_key"
                 android:layout_width="150dp"
                 android:layout_height="150dp"
-                android:src="@drawable/shakey_key"/>
+                android:src="@drawable/shakey_key" />
 
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
             android:layout_marginRight="40dp"
+            android:layout_weight="1"
             android:gravity="center">
 
             <ImageView
                 android:id="@+id/fragment_shakey_share"
                 android:layout_width="100dp"
                 android:layout_height="100dp"
-                android:src="@drawable/shakey_share"/>
+                android:src="@drawable/shakey_share" />
 
         </LinearLayout>
 

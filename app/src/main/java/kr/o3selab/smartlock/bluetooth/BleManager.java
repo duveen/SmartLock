@@ -19,14 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import kr.o3selab.smartlock.activities.GlobalApplication;
-import kr.o3selab.smartlock.common.API;
+import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.activities.MainActivity;
 import kr.o3selab.smartlock.common.AppSettings;
 import kr.o3selab.smartlock.common.Common;
-import kr.o3selab.smartlock.common.JSONHandler;
+import kr.o3selab.smartlock.common.GlobalApplication;
 import kr.o3selab.smartlock.common.Logs;
-import kr.o3selab.smartlock.activities.MainActivity;
-import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.common.utils.Utils;
 
 public class BleManager {
 
@@ -149,10 +148,10 @@ public class BleManager {
      */
     private int checkGattServices(List<BluetoothGattService> gattServices) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            if(mBluetoothAdapter == null){
+            if (mBluetoothAdapter == null) {
                 Logs.d("# 블루투스 어댑터 초기화 안됨");
             }
-            if(mBluetoothAdapter == null){
+            if (mBluetoothAdapter == null) {
                 Logs.d("# 블루투스 GATT 초기화 안됨");
             }
             return -1;
@@ -527,7 +526,7 @@ public class BleManager {
                     PendingIntent pendingIntent = PendingIntent.getActivity(mContext, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
                     //알림 설정에 따라 알림이 울림
-                    if(AppSettings.getNotiSetting()){
+                    if (AppSettings.getNotiSetting()) {
                         Notifi = new Notification.Builder(mContext)
                                 .setContentTitle("Shakey")
                                 .setContentText("Secretkey Authentication request")
@@ -557,14 +556,7 @@ public class BleManager {
                         }
                         Log.d(TAG, "서비스->디바이스 : " + secret);
                     }
-                    Common common = GlobalApplication.getCommon();
-                    String userId = common.getSharedPreferences().getString(Common.NAVER_ID, "null");
-                    try {
-                        String result = new JSONHandler(API.SEND_LOG, "userId=" + userId + "&secret=" + AppSettings.getSecretkey()).execute().get();
-                        Log.d(TAG, result);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                    String userId = Utils.getSharedPreferences(GlobalApplication.getGlobalApplicationContext()).getString(Common.NAVER_ID, "null");
                 } else if (str.contains("secret")) {
                     if (data.length > 0) {
                         StringTokenizer st = new StringTokenizer(str, "+");

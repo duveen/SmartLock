@@ -2,10 +2,10 @@ package kr.o3selab.smartlock.common;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import java.util.Vector;
 
+import kr.o3selab.smartlock.models.Shakey;
 import kr.o3selab.smartlock.service.BTCTemplateService;
 
 public class Common {

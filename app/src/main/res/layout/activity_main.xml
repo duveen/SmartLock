@@ -14,7 +14,7 @@
 
         <include layout="@layout/content_main" />
 
-        <include layout="@layout/custom_drawer_menu" />
+        <include layout="@layout/content_menu" />
 
     </android.support.v4.widget.DrawerLayout>
 

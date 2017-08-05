@@ -1,4 +1,4 @@
-package kr.o3selab.smartlock.dialog;
+package kr.o3selab.smartlock.layouts;
 
 /**
  * Created by LGY on 2016-10-31.

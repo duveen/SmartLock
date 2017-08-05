@@ -3,42 +3,43 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:gravity="center"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="300dip"
         android:layout_height="200dip"
-        android:orientation="vertical" >
+        android:orientation="vertical">
 
-        <TextView style="@android:style/Widget.Holo.Light.TextView"
+        <TextView
             android:id="@+id/txt_title"
+            style="@android:style/Widget.Holo.Light.TextView"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textSize="25sp"
-            android:textStyle="bold"
             android:layout_marginTop="20dp"
+            android:gravity="center"
             android:text="민감도 조절"
-            />
+            android:textSize="25sp"
+            android:textStyle="bold" />
 
-        <TextView style="@android:style/Widget.Holo.Light.TextView"
-        android:id="@+id/txt_respon"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:textSize="15sp"
-        />
+        <TextView
+            android:id="@+id/txt_respon"
+            style="@android:style/Widget.Holo.Light.TextView"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:textSize="15sp" />
 
 
-        <SeekBar style="@android:style/Widget.Holo.Light.SeekBar"
+        <SeekBar
             android:id="@+id/respon_seekbar"
-            android:layout_centerInParent="true"
+            style="@android:style/Widget.Holo.Light.SeekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:max="100"
-            android:layout_marginTop="30dp"
+            android:layout_centerInParent="true"
             android:layout_marginLeft="20dp"
-            android:layout_marginRight="20dp"/>
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="30dp"
+            android:max="100" />
     </LinearLayout>
 </LinearLayout>

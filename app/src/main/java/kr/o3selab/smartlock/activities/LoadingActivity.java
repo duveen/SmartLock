@@ -2,63 +2,57 @@ package kr.o3selab.smartlock.activities;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.util.Log;
+import android.support.annotation.NonNull;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 
-import kr.o3selab.smartlock.common.API;
-import kr.o3selab.smartlock.common.JSONHandler;
-import kr.o3selab.smartlock.common.Shakey;
 import kr.o3selab.smartlock.R;
-import kr.o3selab.smartlock.common.Utils;
+import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.common.utils.Utils;
 
 public class LoadingActivity extends BaseActivity {
 
     public static final String TAG = "LoadingActivity";
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
 
+        Debug.d(String.valueOf(System.currentTimeMillis()));
+
+        Utils.getAppKeyHash(this);
+
         new TedPermission(LoadingActivity.this)
                 .setPermissionListener(permissionlistener)
                 .setRationaleMessage("SHAKEY 서비스를 이용하기 위한 권한입니다.")
                 .setDeniedMessage("권한 미제공시 서비스 제공이 어렵습니다. 프로그램을 종료합니다. 다시 실행해주세요!")
-                .setPermissions(Manifest.permission.READ_PHONE_STATE,
+                .setPermissions(
+                        Manifest.permission.READ_PHONE_STATE,
                         Manifest.permission.BLUETOOTH,
                         Manifest.permission.BLUETOOTH_ADMIN,
                         Manifest.permission.WAKE_LOCK,
                         Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.ACCESS_NETWORK_STATE
-                ).check();
+                )
+                .check();
     }
 
     PermissionListener permissionlistener = new PermissionListener() {
         @Override
         public void onPermissionGranted() {
-
-            SharedPreferences sharedPreferences = Utils.getSharedPreferences(LoadingActivity.this);
-            Boolean register = sharedPreferences.getBoolean(common.REGISTER, false);
-
-            if (register) {
-                getShakeys();
-            } else {
-                startActivity(new Intent(LoadingActivity.this, RegisterActivity.class));
-                LoadingActivity.this.finish();
-            }
-
+            getAuthStatus();
         }
 
         @Override
@@ -68,52 +62,42 @@ public class LoadingActivity extends BaseActivity {
         }
     };
 
-
-
-    /* 자물쇠 정보 가져오기 */
-    private void getShakeys() {
-        SharedPreferences sharedPreferences = Utils.getSharedPreferences(LoadingActivity.this);
-        String phoneId = sharedPreferences.getString(common.NAVER_ID, "null");
-        if(!phoneId.equals("null")) {
-            try {
-                String param = "userId=" + phoneId;
-                String result = new JSONHandler(API.GET_SHAKEY_LIST, param).execute().get();
-
-                JSONObject jsonObject = new JSONObject(result);
-                JSONArray jsonArray = jsonObject.getJSONArray("result");
-
-                for(int i = 0; i < jsonArray.length(); i++) {
-                    JSONObject row = jsonArray.getJSONObject(i);
-
-                    String userId = row.getString("userId");
-                    String secret = row.getString("secret");
-                    String name = row.getString("name");
-                    String mac = row.getString("mac");
-                    String firstregister = row.getString("firstregister");
-                    String lastopen = row.getString("lastopen");
-
-                    common.shakeys.add(new Shakey(userId, secret, name, mac, firstregister, lastopen));
-                }
-
-            } catch (Exception e) {
-                Log.e(TAG, e.getMessage());
-            }
+    private void getAuthStatus() {
+        int resultCode = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(LoadingActivity.this);
+        if (resultCode == ConnectionResult.SUCCESS) {
+            mAuth = FirebaseAuth.getInstance();
+            mAuth.addAuthStateListener(authStateListener);
+        } else {
+            Toast.makeText(LoadingActivity.this, "Google Play 서비스 버전 업데이트가 필요합니다.", Toast.LENGTH_LONG).show();
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("market://details?id=com.google.android.gms"));
+            startActivity(intent);
+            LoadingActivity.this.finish();
         }
-
-        startActivity(new Intent(LoadingActivity.this, MainActivity.class));
-        LoadingActivity.this.finish();
     }
 
+    FirebaseAuth.AuthStateListener authStateListener = new FirebaseAuth.AuthStateListener() {
+        @Override
+        public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+            Debug.d("Firebase Login Check");
+
+            FirebaseUser user = firebaseAuth.getCurrentUser();
+
+            if (user == null) {
+                Debug.d("Logout: Start Register Activity");
+                startActivity(new Intent(LoadingActivity.this, RegisterActivity.class));
+            } else {
+                Debug.d("Login: Start Main Activity (UID:" + user.getUid() + ")");
+                startActivity(new Intent(LoadingActivity.this, MainActivity.class));
+            }
+
+            LoadingActivity.this.finish();
+        }
+    };
 
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         super.onDestroy();
-    }
-
-    public class ActivityHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-        }
+        if (mAuth != null) mAuth.removeAuthStateListener(authStateListener);
     }
 }

@@ -10,19 +10,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-
-import kr.o3selab.smartlock.common.API;
+import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.common.AppSettings;
-import kr.o3selab.smartlock.common.Common;
 import kr.o3selab.smartlock.common.Constants;
 import kr.o3selab.smartlock.common.Logs;
-import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.service.BTCTemplateService;
 
 public class ShakeyConnectActivity extends BaseActivity {
@@ -34,8 +25,6 @@ public class ShakeyConnectActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shakey_connect);
-
-        myService = common.service;
 
         Button registerButton = (Button) findViewById(R.id.shakey_register_button);
         Button nextButton = (Button) findViewById(R.id.shakey_next_button);
@@ -107,13 +96,11 @@ public class ShakeyConnectActivity extends BaseActivity {
             pd = new ProgressDialog(ShakeyConnectActivity.this);
             pd.setTitle("연결중");
             pd.setMessage("자물쇠와 연결중입니다. 조금만 기다려주세요!");
-            // pd.setCancelable(false);
             pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         }
 
         @Override
         protected void onPreExecute() {
-            Log.d(TAG, "pre");
             pd.show();
         }
 
@@ -136,98 +123,6 @@ public class ShakeyConnectActivity extends BaseActivity {
                     break;
                 }
                 if (AppSettings.GATT_SUCCEESS == 2) {
-                    break;
-                }
-            }
-
-            while (true) {
-                if (Common.registerShakeyParam == null) continue;
-                Log.d(TAG, Common.registerShakeyParam);
-
-                if (Common.registerShakeyParam.equals("already")) {
-                    Common.addShakeyStatus = 1;
-                    break;
-                }
-
-                try {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                String url = API.FIRST_SHAKEY_REGISTER;
-                                String param = Common.registerShakeyParam;
-
-                                Log.d(TAG, API.FIRST_SHAKEY_REGISTER);
-                                Log.d(TAG, Common.registerShakeyParam);
-
-                                HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-                                con.setRequestMethod("POST");
-                                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-                                con.setDoOutput(true);
-                                con.setDoInput(true);
-
-                                if (param != null) {
-                                    OutputStream os = con.getOutputStream();
-                                    os.write(param.getBytes("euc-kr"));
-                                    os.flush();
-                                    os.close();
-                                }
-
-                                InputStream is = con.getInputStream();
-
-                                BufferedReader br = new BufferedReader(new InputStreamReader(is, "euc-kr"));
-                                StringBuilder sb = new StringBuilder();
-                                String line;
-
-                                con.getResponseCode();
-
-                                while ((line = br.readLine()) != null) {
-                                    sb.append(line);
-                                }
-
-                                String result = br.toString();
-
-                                Common.registerShakeyParam = null;
-                                Common.addShakeyStatus = 2;
-
-                                is.close();
-                                br.close();
-                                Log.d(TAG, result);
-
-                                if (result.contains("TRUE")) {
-                                    Common.registerShakeyParam = null;
-                                    Common.addShakeyStatus = 2;
-                                } else if (result.contains("Error")) {
-                                    Common.registerShakeyParam = null;
-                                    Common.addShakeyStatus = 1;
-                                }
-                            } catch (Exception e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        }
-                    }.start();
-                    break;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            while (true) {
-                if (Common.addShakeyStatus == 1) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(ShakeyConnectActivity.this, "이미 등록되어 있는 자물쇠 입니다. 다른 자물쇠를 등록해주세요!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                    break;
-                } else if (Common.addShakeyStatus == 2) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(ShakeyConnectActivity.this, "등록 성공!", Toast.LENGTH_SHORT).show();
-                        }
-                    });
                     break;
                 }
             }

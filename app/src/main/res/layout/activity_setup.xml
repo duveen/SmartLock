@@ -1,70 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_setup"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".activities.SetupActivity" >
+    tools:context=".activities.SetupActivity">
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:background="@color/background">
+        android:background="@color/colorPrimary">
 
         <ImageView
-            android:id="@+id/activity_setup_ic_undo"
+            android:id="@+id/setting_back"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_margin="10dp"
             android:src="@drawable/ic_undo"
-            android:tint="#ffffff"
-            android:layout_margin="10dp" />
+            android:tint="#ffffff" />
 
 
         <TextView
+            android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="설정"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:textColor="#ffffff"
             android:layout_gravity="center_vertical|center_horizontal"
-            android:id="@+id/textView" />
+            android:text="설정"
+            android:textColor="#ffffff"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
     </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin">
+        android:orientation="vertical">
 
         <LinearLayout
             android:id="@+id/setting_notice"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
             android:orientation="horizontal"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="10dp">
+            android:padding="15dp">
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_notice_black"/>
+                android:src="@drawable/ic_notice_black" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="20dp"
-                android:text="공지사항"
+                android:layout_marginRight="20dp"
+                android:layout_weight="1"
                 android:gravity="center_vertical"
-                android:layout_weight="1"/>
+                android:text="공지사항" />
 
         </LinearLayout>
 
@@ -74,21 +70,23 @@
             android:id="@+id/setting_sensitive"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
             android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:padding="15dp">
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_vibration_black"/>
+                android:src="@drawable/ic_vibration_black" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_marginLeft="20dp"
                 android:layout_weight="1"
-                android:text="민감도설정"
                 android:gravity="center_vertical"
-                android:layout_marginLeft="20dp"/>
+                android:text="민감도설정" />
 
         </LinearLayout>
 
@@ -98,27 +96,30 @@
             android:id="@+id/setting_alert"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
             android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:padding="15dp">
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_notifications_active_black"/>
+                android:src="@drawable/ic_notifications_active_black" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_marginLeft="20dp"
                 android:layout_weight="4"
-                android:text="알람설정"
                 android:gravity="center_vertical"
-                android:layout_marginLeft="20dp"/>
+                android:text="알람설정" />
+
             <Switch
                 android:id="@+id/noti_toggle"
                 android:layout_width="15dp"
                 android:layout_height="match_parent"
                 android:layout_marginBottom="10dp"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
 
 
         </LinearLayout>
@@ -129,21 +130,23 @@
             android:id="@+id/setting_contact"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
             android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:padding="15dp">
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_mail_black"/>
+                android:src="@drawable/ic_mail_black" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:layout_marginLeft="20dp"
-                android:text="문의하기"
-                android:gravity="center_vertical"/>
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="문의하기" />
 
         </LinearLayout>
 
@@ -153,21 +156,23 @@
             android:id="@+id/setting_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
             android:orientation="horizontal"
-            android:layout_margin="10dp">
+            android:padding="15dp">
 
             <ImageView
                 android:layout_width="30dp"
                 android:layout_height="30dp"
-                android:src="@drawable/ic_error_outline_black"/>
+                android:src="@drawable/ic_error_outline_black" />
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
                 android:layout_marginLeft="20dp"
-                android:text="어플정보"
-                android:gravity="center_vertical"/>
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:text="어플정보" />
 
         </LinearLayout>
 

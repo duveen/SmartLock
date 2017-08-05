@@ -24,10 +24,10 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.Timer;
 
+import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.bluetooth.BleManager;
 import kr.o3selab.smartlock.common.Common;
 import kr.o3selab.smartlock.common.Logs;
-import kr.o3selab.smartlock.R;
 
 public class DeviceListActivity extends BaseActivity {
 
@@ -51,7 +51,7 @@ public class DeviceListActivity extends BaseActivity {
 
     //UI
     private Button btnScan = null;
-    private static final int  MY_PERMISSIONS_REQUEST_READ_CONTACTS =101;
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 101;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,7 +109,7 @@ public class DeviceListActivity extends BaseActivity {
         if (pairedDevices.size() > 0) {
             findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices) {
-                if(device.getName().contains("Shakey"))
+                if (device.getName().contains("Shakey"))
                     mPairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             }
         } else {
@@ -139,7 +139,7 @@ public class DeviceListActivity extends BaseActivity {
                         public void run() {//새로 스캔된 장치 추가
                             if (device.getBondState() != BluetoothDevice.BOND_BONDED) {//새로 검색된 장치인경우
                                 if (!checkDuplicated(device)) {//같은 디바이스 검색 중복확인 처리
-                                    Log.d("Scan divece : ",device.getName() + device.getAddress());
+                                    Log.d("Scan divece : ", device.getName() + device.getAddress());
                                     mNewDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
                                     mNewDevicesArrayAdapter.notifyDataSetChanged();
                                     mDevices.add(device);
@@ -164,13 +164,14 @@ public class DeviceListActivity extends BaseActivity {
                 Log.d(TAG, "User selected device : " + address);
 
                 for (BluetoothDevice de : mDevices) {
-                    if(address.equals(de.getAddress())) {
-                        startBluetoothPairing(de); break;
+                    if (address.equals(de.getAddress())) {
+                        startBluetoothPairing(de);
+                        break;
                     }
                 }
 
                 // 결과 Intent에 Mac 주소를 포함시킨다.
-                selectAddress= address;
+                selectAddress = address;
                 Intent intent1 = new Intent();
                 intent1.putExtra(EXTRA_DEVICE_ADDRESS, selectAddress);
                 // 화면을 닫으면서 Intent를 보냄
@@ -223,7 +224,7 @@ public class DeviceListActivity extends BaseActivity {
             public void run() {
                 stopScan();
             }
-        },SCAN_PERIOD);//지정 시간후 스캔 멈춤
+        }, SCAN_PERIOD);//지정 시간후 스캔 멈춤
 
     }
 
@@ -248,8 +249,7 @@ public class DeviceListActivity extends BaseActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(bluetoothAdapter != null)
-        {
+        if (bluetoothAdapter != null) {
             bluetoothAdapter.cancelDiscovery();//검색 멈춤
         }
     }
@@ -261,6 +261,7 @@ public class DeviceListActivity extends BaseActivity {
             super.handleMessage(msg);
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch (requestCode) {
@@ -278,7 +279,8 @@ public class DeviceListActivity extends BaseActivity {
                 }
                 return;
             }
-            default:break;
+            default:
+                break;
 
             // other 'case' lines to check for other
             // permissions this app might request
@@ -290,15 +292,15 @@ public class DeviceListActivity extends BaseActivity {
             String action = intent.getAction();
 
             if (BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
-                final int state        = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
-                final int prevState    = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
+                final int state = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, BluetoothDevice.ERROR);
+                final int prevState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, BluetoothDevice.ERROR);
 
                 //if (state == BluetoothDevice.BOND_BONDED && prevState == BluetoothDevice.BOND_BONDING) {
 
                 if (state == BluetoothDevice.BOND_BONDED) {
-                    Toast.makeText(context,"페어링됨",Toast.LENGTH_LONG).show();
-                } else if (state == BluetoothDevice.BOND_NONE && prevState == BluetoothDevice.BOND_BONDED){
-                    Toast.makeText(context,"페어링실패",Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "페어링됨", Toast.LENGTH_LONG).show();
+                } else if (state == BluetoothDevice.BOND_NONE && prevState == BluetoothDevice.BOND_BONDED) {
+                    Toast.makeText(context, "페어링실패", Toast.LENGTH_LONG).show();
                 }
 
             }
