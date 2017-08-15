@@ -2,5 +2,6 @@
 <resources>
 
     <string name="google_oauth_key" templateMergeStrategy="preserve" translatable="false">347166651116-ph5qn6fmtroe0inpgkqjhs5grpeui5nj.apps.googleusercontent.com</string>
+    <string name="google_oauth_key_mac" templateMergeStrategy="preserve" translatable="false">347166651116-tkkni5c8elff87d2u2lmi5965t913bgu.apps.googleusercontent.com</string>
 
 </resources>

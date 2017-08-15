@@ -27,6 +27,7 @@ import com.google.firebase.auth.GoogleAuthProvider;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.common.utils.Debug;
 
 public class RegisterActivity extends AppCompatActivity implements OnCompleteListener<AuthResult> {
 
@@ -136,6 +137,8 @@ public class RegisterActivity extends AppCompatActivity implements OnCompleteLis
             AuthCredential credential = GoogleAuthProvider.getCredential(account.getIdToken(), null);
             FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this);
         } else {
+            Debug.d(result.getStatus().getStatusMessage());
+
             alertLoginError();
         }
     }

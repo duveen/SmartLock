@@ -1,6 +1,7 @@
 package kr.o3selab.smartlock.layouts;
 
 import android.app.Dialog;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,6 +22,7 @@ public class OptionsDialog extends Dialog {
 
     private WindowManager.LayoutParams mLayoutParams;
     private Shakey shakey;
+    private BluetoothDevice bleDevice;
 
     @BindView(R.id.custom_dialog_title)
     TextView mTitleView;
@@ -36,8 +38,8 @@ public class OptionsDialog extends Dialog {
     public static class Builder {
         OptionsDialog dialog;
 
-        public Builder(Context context, Shakey shakey) {
-            dialog = new OptionsDialog(context, shakey);
+        public Builder(Context context) {
+            dialog = new OptionsDialog(context);
         }
 
         public Builder setTitle(String title) {
@@ -50,6 +52,11 @@ public class OptionsDialog extends Dialog {
             return this;
         }
 
+        public Builder setShakey(Shakey shakey) {
+            dialog.setShakey(shakey);
+            return this;
+        }
+
         public Builder setMessage(@StringRes int resId) {
             dialog.setMessage(resId);
             return this;
@@ -57,6 +64,10 @@ public class OptionsDialog extends Dialog {
 
         public Builder setCancelable(boolean flag) {
             dialog.setCancelable(flag);
+            return this;
+        }
+
+        public Builder setBleDevice(BluetoothDevice device) {
             return this;
         }
 
@@ -79,9 +90,8 @@ public class OptionsDialog extends Dialog {
         }
     }
 
-    private OptionsDialog(@NonNull Context context, Shakey shakey) {
+    private OptionsDialog(@NonNull Context context) {
         super(context);
-        this.shakey = shakey;
 
         View view = getLayoutInflater().inflate(R.layout.dialog_options, null);
         this.setContentView(view);
@@ -111,19 +121,35 @@ public class OptionsDialog extends Dialog {
         mTitleView.setText(title);
     }
 
-    public void setMessage(@Nullable CharSequence message) {
+    private void setShakey(Shakey shakey) {
+        this.shakey = shakey;
+    }
+
+    public Shakey getShakey() {
+        return shakey;
+    }
+
+    private void setBleDevice(BluetoothDevice device) {
+        this.bleDevice = device;
+    }
+
+    public BluetoothDevice getBleDevice() {
+        return bleDevice;
+    }
+
+    private void setMessage(@Nullable CharSequence message) {
         mContentView.setText(message);
     }
 
-    public void setMessage(@StringRes int resId) {
+    private void setMessage(@StringRes int resId) {
         mContentView.setText(resId);
     }
 
-    public void setOnClickListener(OptionsDialogClickListener listener) {
+    private void setOnClickListener(OptionsDialogClickListener listener) {
         this.listener = listener;
     }
 
-    public void setOptions(Options options) {
+    private void setOptions(Options options) {
         switch (options) {
             case YES:
                 mNoTextView.setVisibility(View.GONE);
@@ -136,16 +162,16 @@ public class OptionsDialog extends Dialog {
 
     @OnClick(R.id.custom_dialog_yes)
     void yesOnClick() {
-        if (listener != null) listener.onClick(this, shakey, ANSWER.YES);
+        if (listener != null) listener.onClick(this, ANSWER.YES);
     }
 
     @OnClick(R.id.custom_dialog_no)
     void noOnClick() {
-        if (listener != null) listener.onClick(this, shakey, ANSWER.NO);
+        if (listener != null) listener.onClick(this, ANSWER.NO);
     }
 
     public interface OptionsDialogClickListener {
-        void onClick(Dialog v, Shakey shakey, ANSWER options);
+        void onClick(OptionsDialog dialog, ANSWER options);
     }
 
     public enum Options {YES, YES_NO}

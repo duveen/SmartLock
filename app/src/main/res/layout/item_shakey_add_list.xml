@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#ddffffff">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:layout_margin="10dp"
+            android:background="@color/colorPrimary"
+            android:src="@drawable/shakey_icon_no_bg" />
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginBottom="8dp"
+            android:layout_marginLeft="50dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/item_shakey_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="2dp"
+                android:text="Shakey(OCOO)"
+                android:textColor="@color/black"
+                android:textSize="@dimen/font_subheading" />
+
+            <TextView
+                android:id="@+id/item_shakey_mac"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginTop="2dp"
+                android:text="00:00:00:00:00:00"
+                android:textColor="@color/bootstrap_gray_light"
+                android:textSize="@dimen/font_body" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!--<include layout="@layout/line" />-->
+
+</LinearLayout>

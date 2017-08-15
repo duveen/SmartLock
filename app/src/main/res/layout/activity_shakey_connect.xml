@@ -1,31 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_shakey_connect"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/colorPrimary"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
+    android:orientation="vertical"
     tools:context="kr.o3selab.smartlock.activities.ShakeyConnectActivity">
 
     <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="wrap_content"
-        android:layout_height="400dp"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp"
-        android:padding="40dp"
-        android:src="@drawable/connect" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/shakey_icon_no_bg" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp">
+
+            <LinearLayout
+                android:id="@+id/shakey_connect_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:orientation="vertical" />
+
+        </ScrollView>
+
+        <LinearLayout
+            android:id="@+id/shakey_connect_no_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:orientation="vertical">
+
+            <ImageView
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="30dp"
+                android:adjustViewBounds="true"
+                android:src="@drawable/drawer_menu_shakey_icon"
+                android:tint="@color/white" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="검색된 결과가 없습니다."
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="@dimen/font_subheading" />
+
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/shakey_connect_progress"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_gravity="center"
+            android:visibility="gone"/>
+
+    </FrameLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
+        android:layout_gravity="bottom"
         android:layout_margin="10dp"
         android:orientation="horizontal">
 
@@ -47,4 +100,4 @@
             android:background="@drawable/button"
             android:text="나중에 등록" />
     </LinearLayout>
-</RelativeLayout>
+</LinearLayout>

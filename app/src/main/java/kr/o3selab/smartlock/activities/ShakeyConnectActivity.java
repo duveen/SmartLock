@@ -1,19 +1,28 @@
 package kr.o3selab.smartlock.activities;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Vector;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.bluetooth.BLEHelper;
 import kr.o3selab.smartlock.common.AppSettings;
 import kr.o3selab.smartlock.common.Constants;
 import kr.o3selab.smartlock.common.Logs;
+import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.layouts.OptionsDialog;
 import kr.o3selab.smartlock.service.BTCTemplateService;
 
 public class ShakeyConnectActivity extends BaseActivity {
@@ -21,33 +30,92 @@ public class ShakeyConnectActivity extends BaseActivity {
     private BTCTemplateService myService;
     public static final String TAG = "ShakeyConnectActivity";
 
+    @BindView(R.id.shakey_connect_list)
+    LinearLayout mListLayout;
+    @BindView(R.id.shakey_connect_no_list)
+    LinearLayout mNoFoundItemView;
+    @BindView(R.id.shakey_connect_progress)
+    View mProgress;
+
+    private HashMap<String, BluetoothDevice> mDevices;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shakey_connect);
 
-        Button registerButton = (Button) findViewById(R.id.shakey_register_button);
-        Button nextButton = (Button) findViewById(R.id.shakey_next_button);
-
-        registerButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(ShakeyConnectActivity.this, DeviceListActivity.class);
-                startActivityForResult(intent, Constants.REQUEST_CONNECT_DEVICE);
-            }
-        });
-
-        nextButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                ShakeyConnectActivity.this.finish();
-            }
-        });
+        ButterKnife.bind(this);
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+    @OnClick(R.id.shakey_register_button)
+    void register() {
+        if (!BLEHelper.getInstance().isBluetoothEnabled()) {
+            return;
+        }
+
+        mDevices = new HashMap<>();
+        mListLayout.removeAllViewsInLayout();
+
+        BLEHelper.getInstance().startLEScan(this, callback);
+    }
+
+    @OnClick(R.id.shakey_next_button)
+    void close() {
+        onBackPressed();
+    }
+
+    BLEHelper.BLEFindListener callback = new BLEHelper.BLEFindListener() {
+        @Override
+        public void onStart() {
+            mProgress.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onEnd() {
+            mProgress.setVisibility(View.GONE);
+        }
+
+        @Override
+        public void onFind(BluetoothDevice device) {
+            Debug.d(String.valueOf(mDevices.size()));
+            if (!mDevices.containsKey(device.getAddress())) {
+                mDevices.put(device.getAddress(), device);
+                mListLayout.addView(getBluetoothItemView(device));
+            }
+
+        }
+    };
+
+    private View getBluetoothItemView(final BluetoothDevice device) {
+        View view = getLayoutInflater().inflate(R.layout.item_shakey_add_list, null);
+
+        TextView nameView = (TextView) view.findViewById(R.id.item_shakey_name);
+        if (device.getName() != null) nameView.setText(device.getName());
+        else nameView.setText("이름 정보 없음");
+
+        TextView macView = (TextView) view.findViewById(R.id.item_shakey_mac);
+        macView.setText(device.getAddress());
+
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                new OptionsDialog.Builder(ShakeyConnectActivity.this)
+                        .setTitle("연결시도")
+                        .setMessage("Shakey 장치와 연결을 시도하시겠습니까?")
+                        .setOptions(OptionsDialog.Options.YES_NO)
+                        .setBleDevice(device)
+                        .setOnClickListener(new OptionsDialog.OptionsDialogClickListener() {
+                            @Override
+                            public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                                dialog.dismiss();
+                                if (options.equals(OptionsDialog.ANSWER.NO)) return;
+                            }
+                        })
+                        .show();
+            }
+        });
+
+        return view;
     }
 
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -69,7 +137,6 @@ public class ShakeyConnectActivity extends BaseActivity {
                         Log.d(TAG, "Service 디바이스 연결 호출");
                         AppSettings.GATT_SUCCEESS = 0;
                         myService.connectDevice(address);
-                        new GATTCheckTask().execute();
                     }
                 }
                 break;
@@ -85,49 +152,6 @@ public class ShakeyConnectActivity extends BaseActivity {
                     Toast.makeText(this, "블루투스가 꺼져있습니다 설정에서 블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
                 }
                 break;
-        }
-    }
-
-    public class GATTCheckTask extends AsyncTask<Void, Void, Void> {
-
-        ProgressDialog pd;
-
-        public GATTCheckTask() {
-            pd = new ProgressDialog(ShakeyConnectActivity.this);
-            pd.setTitle("연결중");
-            pd.setMessage("자물쇠와 연결중입니다. 조금만 기다려주세요!");
-            pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            pd.show();
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            Log.d(TAG, "post");
-            pd.dismiss();
-            ShakeyConnectActivity.this.finish();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            Log.d(TAG, "sendMessage");
-
-            while (true) {
-                if (AppSettings.GATT_SUCCEESS == 1) {
-                    Log.d(TAG, "G" + AppSettings.GATT_SUCCEESS);
-                    myService.sendMessageToRemote("s");
-                    break;
-                }
-                if (AppSettings.GATT_SUCCEESS == 2) {
-                    break;
-                }
-            }
-
-            return null;
         }
     }
 }

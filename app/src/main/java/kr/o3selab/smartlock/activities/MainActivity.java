@@ -226,22 +226,23 @@ public class MainActivity extends BaseActivity {
 
         @Override
         public void onClick(View v) {
-            new OptionsDialog.Builder(MainActivity.this, shakey)
+            new OptionsDialog.Builder(MainActivity.this)
                     .setTitle("알림")
                     .setMessage(shakey.getName() + "와 지금 연결하시겠습니까?")
                     .setOptions(OptionsDialog.Options.YES_NO)
                     .setOnClickListener(optionsDialogClickListener)
+                    .setShakey(shakey)
                     .show();
         }
     }
 
     OptionsDialog.OptionsDialogClickListener optionsDialogClickListener = new OptionsDialog.OptionsDialogClickListener() {
         @Override
-        public void onClick(Dialog v, Shakey shakey, OptionsDialog.ANSWER options) {
-            v.dismiss();
+        public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+            dialog.dismiss();
             closeMenu();
 
-            drawShakeyInfo(shakey.getSecret());
+            drawShakeyInfo(dialog.getShakey().getSecret());
 
             if (options.equals(OptionsDialog.ANSWER.YES)) {
                 // 확인 눌렸을때

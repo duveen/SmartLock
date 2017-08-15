@@ -1,5 +1,6 @@
 package kr.o3selab.smartlock.activities;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -10,13 +11,16 @@ import android.widget.Switch;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.bluetooth.BLEHelper;
 import kr.o3selab.smartlock.common.AppSettings;
+import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.layouts.ResponsivenessDialog;
 
 public class SetupActivity extends BaseActivity {
-
 
 
     @Override
@@ -25,14 +29,6 @@ public class SetupActivity extends BaseActivity {
         setContentView(R.layout.activity_setup);
 
         ButterKnife.bind(this);
-
-        ImageView undoButton = (ImageView) findViewById(R.id.setting_back);
-        undoButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SetupActivity.this.finish();
-            }
-        });
 
         LinearLayout noticeLayout = (LinearLayout) findViewById(R.id.setting_notice);
         noticeLayout.setOnClickListener(new View.OnClickListener() {
@@ -66,5 +62,29 @@ public class SetupActivity extends BaseActivity {
             }
         });
 
+    }
+
+    @OnClick(R.id.setting_back)
+    void back() {
+        onBackPressed();
+    }
+
+    @OnClick(R.id.setting_info)
+    void info() {
+        BLEHelper.getInstance().startLEScan(this, new BLEHelper.BLEFindListener() {
+            @Override
+            public void onStart() {
+                Debug.d("Start LEScan");
+            }
+
+            @Override
+            public void onEnd() {
+                Debug.d("Stop LEScan");
+            }
+
+            @Override
+            public void onFind(BluetoothDevice device) {
+            }
+        });
     }
 }
