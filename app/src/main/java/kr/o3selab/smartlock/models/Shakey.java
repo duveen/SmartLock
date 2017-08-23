@@ -7,8 +7,23 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.Random;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import kr.o3selab.smartlock.common.ByteArrayBuffer;
+import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.common.utils.HexAsciiHelper;
 
 public class Shakey implements Serializable {
+
+    private static String REQUEST_SECRET_KEY = "K0";
+    private static String RESPONSE_RECEIVE_SECRET_KEY = "K1";
+    private static String REQUEST_UNLOCK = "U0";
+    private static String REQUEST_RESET = "U1";
+    private static String SET_SENS_VALUE = "S0";
+
     private String owner;
     private String ownerEmail;
     private String secret;
@@ -109,6 +124,47 @@ public class Shakey implements Serializable {
 
     public void setOwnerEmail(String ownerEmail) {
         this.ownerEmail = ownerEmail;
+    }
+
+    public byte[] getENCSecretKey(String publicKey) {
+        if (secret == null) return null;
+        try {
+
+            String signKey = "smunlockshakey" + publicKey;
+            Debug.d(signKey);
+            Debug.d(HexAsciiHelper.bytesToHex(signKey.getBytes()));
+            SecretKeySpec secretKeySpec = new SecretKeySpec(signKey.getBytes(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES");
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+            byte[] content = cipher.doFinal(secret.getBytes());
+            Debug.d(String.valueOf(content.length));
+
+            String aesKey = HexAsciiHelper.bytesToHex(content).replace("FFFFFF", "");
+            Debug.d(aesKey);
+
+            return content;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static byte[] requestSecretCommand() {
+        return REQUEST_SECRET_KEY.getBytes();
+    }
+
+    public static byte[] responseReceiveSecretKeyCommand() {
+        return RESPONSE_RECEIVE_SECRET_KEY.getBytes();
+    }
+
+    public byte[] unlockCommand() {
+        String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
+        return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
+    }
+
+    public byte[] resetCommand() {
+        String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
+        return ByteArrayBuffer.getBuffer().append(REQUEST_RESET.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
     }
 
     private static String toDate(Long time) {

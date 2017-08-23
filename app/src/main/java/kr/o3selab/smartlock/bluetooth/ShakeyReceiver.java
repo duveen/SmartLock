@@ -7,11 +7,11 @@ import android.content.Intent;
 import kr.o3selab.smartlock.common.utils.HexAsciiHelper;
 import kr.o3selab.smartlock.services.BLEService;
 
-public class BLEReceiver extends BroadcastReceiver {
+public class ShakeyReceiver extends BroadcastReceiver {
 
     private Callback callback;
 
-    public BLEReceiver(Callback callback) {
+    public ShakeyReceiver(Callback callback) {
         this.callback = callback;
     }
 

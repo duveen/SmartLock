@@ -15,13 +15,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Binder;
 import android.os.IBinder;
 
 import java.util.UUID;
 
 import kr.o3selab.smartlock.bluetooth.BLEHelper;
+import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
 import kr.o3selab.smartlock.common.utils.Debug;
 
 public class BLEService extends Service {
@@ -175,7 +175,7 @@ public class BLEService extends Service {
         Debug.d("Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
 
-        registerReceiver();
+        if (mShakeyReceiver != null) registerReceiver();
         return true;
     }
 
@@ -185,12 +185,8 @@ public class BLEService extends Service {
             return;
         }
 
-        if (isActivationReceiver()) unregisterReceiver();
+        if (mShakeyReceiver != null) unregisterReceiver();
         mBluetoothGatt.disconnect();
-    }
-
-    public boolean isActivationReceiver() {
-        return mShakeyReceiver != null;
     }
 
     public boolean isConnecting() {
@@ -237,14 +233,11 @@ public class BLEService extends Service {
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
+    public void setShakeyReceiver(ShakeyReceiver receiver) {
+        mShakeyReceiver = receiver;
+    }
+
     public void registerReceiver() {
-        mShakeyReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-
-            }
-        };
-
         registerReceiver(mShakeyReceiver, getIntentFilter());
     }
 

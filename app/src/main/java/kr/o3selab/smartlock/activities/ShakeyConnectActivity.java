@@ -22,13 +22,14 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.bluetooth.BLEHelper;
-import kr.o3selab.smartlock.bluetooth.BLEReceiver;
+import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
 import kr.o3selab.smartlock.common.Extras;
 import kr.o3selab.smartlock.layouts.LoadingProgressDialog;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
 import kr.o3selab.smartlock.models.Shakey;
 import kr.o3selab.smartlock.models.ValueEventAdapter;
 import kr.o3selab.smartlock.services.BLEService;
+import kr.o3selab.smartlock.services.ShakeyServiceConnectionCallback;
 
 public class ShakeyConnectActivity extends BaseActivity {
 
@@ -45,6 +46,7 @@ public class ShakeyConnectActivity extends BaseActivity {
 
     private HashMap<String, BluetoothDevice> mDevices;
     private LoadingProgressDialog loading;
+    private ConnectTimer mTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +132,6 @@ public class ShakeyConnectActivity extends BaseActivity {
         return view;
     }
 
-
     OptionsDialog.OnClickListener bluetoothItemClickListener = new OptionsDialog.OnClickListener() {
         @Override
         public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
@@ -145,15 +146,31 @@ public class ShakeyConnectActivity extends BaseActivity {
 
             BluetoothDevice device = (BluetoothDevice) dialog.getExtras(Extras.BLE_DEVICE);
             if (device != null) connectBluetoothDevice(device);
+            else loading.dismiss();
         }
     };
 
     private void connectBluetoothDevice(final BluetoothDevice device) {
-        Intent bleIntent = new Intent(ShakeyConnectActivity.this, BLEService.class);
 
-        if (mBleService == null) bindService(bleIntent, mServiceConnection, BIND_AUTO_CREATE);
+        setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
+            @Override
+            public void onServiceConnected(BLEService service) {
+                mBleService.connect(device.getAddress());
+                mTimer = new ConnectTimer();
+                mTimer.start();
+            }
+
+            @Override
+            public void onServiceDisconnected() {
+                mBleService = null;
+            }
+        });
+
+        Intent bleIntent = new Intent(ShakeyConnectActivity.this, BLEService.class);
+        if (mBleService == null) bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
+
         if (mBroadcastReceiver == null) {
-            mBroadcastReceiver = new BLEReceiver(new BLEReceiver.Callback() {
+            mBroadcastReceiver = new ShakeyReceiver(new ShakeyReceiver.Callback() {
                 @Override
                 public void onConnect() {
                     new Thread(new Runnable() {
@@ -164,15 +181,15 @@ public class ShakeyConnectActivity extends BaseActivity {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            String requestKey = "get_key";
-                            mBleService.send(requestKey.getBytes());
+
+                            mBleService.send(Shakey.requestSecretCommand());
                         }
                     }).start();
                 }
 
                 @Override
                 public void onDisconnect() {
-
+                    showFailedAlert();
                 }
 
                 @Override
@@ -180,24 +197,8 @@ public class ShakeyConnectActivity extends BaseActivity {
                     receiveMessage(data);
                 }
             });
-
             registerReceiver(mBroadcastReceiver, BLEService.getIntentFilter());
         }
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (mBleService == null) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException ignored) {
-
-                    }
-                }
-                mBleService.connect(device.getAddress());
-            }
-        }).start();
-
     }
 
     private void receiveMessage(String message) {
@@ -230,7 +231,8 @@ public class ShakeyConnectActivity extends BaseActivity {
                 }
             });
 
-            mBleService.send(new String("get_key_ack").getBytes());
+            mBleService.send(Shakey.responseReceiveSecretKeyCommand());
+            mTimer.interrupt();
             loading.dismiss();
 
             new OptionsDialog.Builder(ShakeyConnectActivity.this)
@@ -265,8 +267,29 @@ public class ShakeyConnectActivity extends BaseActivity {
         }
     }
 
+    private void showFailedAlert() {
+        if (!loading.isShowing()) return;
+
+        loading.dismiss();
+
+        new OptionsDialog.Builder(ShakeyConnectActivity.this)
+                .setOptions(OptionsDialog.Options.YES)
+                .setTitle("실패")
+                .setMessage("연결에 실패했습니다.")
+                .setCancelable(true)
+                .setOnClickListener(new OptionsDialog.OnClickListener() {
+                    @Override
+                    public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                        dialog.dismiss();
+                    }
+                }).show();
+    }
+
+
     @Override
     protected void onDestroy() {
+        if (mTimer != null && mTimer.isAlive()) mTimer.interrupt();
+
         if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
 
         if (mBroadcastReceiver != null) {
@@ -275,5 +298,26 @@ public class ShakeyConnectActivity extends BaseActivity {
         }
 
         super.onDestroy();
+    }
+
+    private class ConnectTimer extends Thread {
+        @Override
+        public void run() {
+            try {
+                for (int i = 0; i < 7; i++) {
+                    if (isInterrupted()) return;
+                    Thread.sleep(1000);
+                }
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        showFailedAlert();
+                    }
+                });
+            } catch (InterruptedException ignored) {
+
+            }
+        }
     }
 }

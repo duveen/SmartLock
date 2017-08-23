@@ -1,12 +1,13 @@
 package kr.o3selab.smartlock.activities;
 
-
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AlertDialog;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -24,11 +25,13 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
+import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
 import kr.o3selab.smartlock.common.Extras;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
@@ -38,6 +41,7 @@ import kr.o3selab.smartlock.models.ShakeyLog;
 import kr.o3selab.smartlock.models.ShakeyShare;
 import kr.o3selab.smartlock.models.ValueEventAdapter;
 import kr.o3selab.smartlock.services.BLEService;
+import kr.o3selab.smartlock.services.ShakeyServiceConnectionCallback;
 
 
 public class MainActivity extends BaseActivity {
@@ -148,6 +152,7 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        mShakeyShareView.setVisibility(View.GONE);
         mShakeyShareList.removeAllViewsInLayout();
         reference = mFirebaseInstance.getReference("Shares/" + mUser.getUid());
         reference.addListenerForSingleValueEvent(new ValueEventAdapter(this) {
@@ -216,13 +221,10 @@ public class MainActivity extends BaseActivity {
             drawShakeyInfo(mShakey.getSecret());
 
             if (options.equals(OptionsDialog.ANSWER.YES)) {
-
-                Intent bleIntent = new Intent(MainActivity.this, BLEService.class);
-                bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
-
                 setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
                     @Override
                     public void onServiceConnected(BLEService service) {
+                        service.setShakeyReceiver(new ShakeyReceiver(shakeyReceiverCallback));
                         service.connect(mShakey.getMac());
                     }
 
@@ -231,45 +233,41 @@ public class MainActivity extends BaseActivity {
 
                     }
                 });
+
+                Intent bleIntent = new Intent(MainActivity.this, BLEService.class);
+                bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
             }
         }
     };
 
-    /*public final BroadcastReceiver shakeyReceiver = new BroadcastReceiver() {
+    ShakeyReceiver.Callback shakeyReceiverCallback = new ShakeyReceiver.Callback() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
+        public void onConnect() {
+            Debug.d("BLE_CONNECTED");
 
-            switch (action) {
-                case BLEService.BLE_CONNECTED:
-                    Debug.d("BLE_CONNECTED");
-                    shakeyKeyView.clearColorFilter();
-                    shakeyKeyView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            openShakey(mShakey);
-                        }
-                    });
-                    break;
-
-                case BLEService.BLE_DISCONNECTED:
-                    Debug.d("BLE_DISCONNECTED");
-                    shakeyKeyView.setOnClickListener(null);
-                    shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
-
-                    isRunningReceiver = false;
-                    unregisterReceiver(shakeyReceiver);
-                    unbindService(shakeyConnection);
-                    break;
-
-                case BLEService.BLE_DATA_AVAILABLE:
-                    Debug.d("BLE_DATA_AVAILABLE");
-                    byte[] data = intent.getByteArrayExtra(BLEService.BLE_EXTRA_DATA);
-                    String message = HexAsciiHelper.bytesToHex(data);
-                    break;
-            }
+            shakeyKeyView.clearColorFilter();
+            shakeyKeyView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    openShakey();
+                }
+            });
         }
-    };*/
+
+        @Override
+        public void onDisconnect() {
+            Debug.d("BLE_DISCONNECTED");
+            shakeyKeyView.setOnClickListener(null);
+            shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
+
+            unbindService(getServiceConnection());
+        }
+
+        @Override
+        public void onDataAvailable(String data) {
+            Debug.d("BLE_DATA_AVAILABLE");
+        }
+    };
 
     private void drawShakeyInfo(String secret) {
         FirebaseDatabase.getInstance().getReference("Shakeys/" + secret).addListenerForSingleValueEvent(new ValueEventAdapter(this) {
@@ -283,19 +281,18 @@ public class MainActivity extends BaseActivity {
                     return;
                 }
 
-                drawShakeyInfo(shakey);
+                drawShakeyInfo();
             }
         });
     }
 
-    private void drawShakeyInfo(final Shakey shakey) {
-
-        shakeyInfoNameView.setText(shakey.getName());
-        shakeyLastOpenView.setText("마지막으로 연 시간 : " + shakey.getLastOpen(true));
+    private void drawShakeyInfo() {
+        shakeyInfoNameView.setText(mShakey.getName());
+        shakeyLastOpenView.setText("마지막으로 연 시간 : " + mShakey.getLastOpen(true));
         shakeyInfoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startShakeyInfoActivity(shakey);
+                showShakeyOptions();
             }
         });
 
@@ -306,14 +303,67 @@ public class MainActivity extends BaseActivity {
                 Toast.makeText(mContext, "개발중", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showShakeyOptions() {
+
+        LinkedList<String> menuList = new LinkedList<>();
+        menuList.add("정보 확인");
+        menuList.add("이름 변경");
+
+        if (mBleService != null) {
+            menuList.add("민감도 값 설정");
+            menuList.add("Shakey 삭제");
+        }
+
+        new AlertDialog.Builder(this)
+                .setSingleChoiceItems((CharSequence[]) menuList.toArray(), 0, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        switch (which) {
+                            case 0:
+                                showShakeyInfo();
+                                break;
+                            case 1:
+                                changeShakeyName();
+                                break;
+                            case 2:
+                                changeShakeySensValue();
+                                break;
+                            case 3:
+                                removeShakey();
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }).show();
+    }
+
+    private void showShakeyInfo() {
+        Intent intent = new Intent(this, ShakeyInfoActivity.class);
+        intent.putExtra(Extras.SHAKEY, mShakey);
+        startActivity(intent);
+    }
+
+    private void changeShakeyName() {
 
     }
 
-    private void openShakey(Shakey shakey) {
+    private void changeShakeySensValue() {
+
+    }
+
+    private void removeShakey() {
+
+    }
+
+    private void openShakey() {
 
         final long openTime = System.currentTimeMillis();
 
-        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Logs/" + shakey.getSecret()).push();
+        DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Logs/" + mShakey.getSecret()).push();
         ShakeyLog log = new ShakeyLog();
 
         log.setWho(mUser.getUid());
@@ -322,8 +372,8 @@ public class MainActivity extends BaseActivity {
 
         reference.setValue(log);
 
-        shakey.setLastOpen(openTime);
-        FirebaseDatabase.getInstance().getReference("Shakeys/" + shakey.getSecret()).runTransaction(new Transaction.Handler() {
+        mShakey.setLastOpen(openTime);
+        FirebaseDatabase.getInstance().getReference("Shakeys/" + mShakey.getSecret()).runTransaction(new Transaction.Handler() {
             @Override
             public Transaction.Result doTransaction(MutableData mutableData) {
                 Shakey shakey = mutableData.getValue(Shakey.class);
@@ -343,19 +393,12 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        if (!mUser.getUid().equals(shakey.getOwner())) {
-            ShakeyAlert.getInstance().alert(this, shakey);
+        if (!mUser.getUid().equals(mShakey.getOwner())) {
+            ShakeyAlert.getInstance().alert(this, mShakey);
         }
 
-        mBleService.send(shakey.getSecret().getBytes());
-
-        drawShakeyInfo(shakey);
-    }
-
-    private void startShakeyInfoActivity(Shakey shakey) {
-        Intent intent = new Intent(this, ShakeyInfoActivity.class);
-        intent.putExtra(Extras.SHAKEY, shakey);
-        startActivity(intent);
+        mBleService.send(mShakey.unlockCommand());
+        drawShakeyInfo();
     }
 
     private void closeMenu() {
@@ -374,7 +417,9 @@ public class MainActivity extends BaseActivity {
     }
 
     public void updateUI() {
-        if (mBleService == null) {
+        if (mBleService.isConnecting()) {
+            drawShakeyInfo();
+        } else {
             shakeyInfoNameView.setText("연결된 Shakey 없음");
 
             shakeyInfoView.setOnClickListener(null);
@@ -384,8 +429,6 @@ public class MainActivity extends BaseActivity {
 
             shakeyKeyView.setOnClickListener(null);
             shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
-        } else {
-
         }
     }
 }

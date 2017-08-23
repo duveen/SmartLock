@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.common.utils.Utils;
+import kr.o3selab.smartlock.models.Shakey;
 import kr.o3selab.smartlock.services.FCMIDService;
 
 public class LoadingActivity extends BaseActivity {

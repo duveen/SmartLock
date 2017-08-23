@@ -39,10 +39,6 @@
         <activity android:name=".activities.settings.AlertActivity" />
 
         <activity android:name=".activities.ShakeyInfoActivity" />
-        <activity
-            android:name=".activities.DeviceListActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:theme="@android:style/Theme.Holo.Light.Dialog" />
         <activity android:name=".activities.NoticeActivity" />
 
         <!-- 로그인 부분 -->

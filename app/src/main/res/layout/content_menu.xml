@@ -6,11 +6,19 @@
     android:background="#FFFFFF"
     android:orientation="vertical">
 
-    <ImageView
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:adjustViewBounds="true"
-        android:src="@drawable/drawer_menu_logo" />
+        android:background="@color/colorPrimary">
+
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center"
+            android:adjustViewBounds="true"
+            android:src="@drawable/shakey_icon_no_bg" />
+
+    </FrameLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -52,7 +60,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:visibility="visible">
+                android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"

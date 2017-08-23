@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.services.BLEService;
+import kr.o3selab.smartlock.services.ShakeyServiceConnectionCallback;
 
 public class BaseActivity extends AppCompatActivity {
 
@@ -73,8 +74,3 @@ public class BaseActivity extends AppCompatActivity {
     }
 }
 
-interface ShakeyServiceConnectionCallback {
-    void onServiceConnected(BLEService service);
-
-    void onServiceDisconnected();
-}
