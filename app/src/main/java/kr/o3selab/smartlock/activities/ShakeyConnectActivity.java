@@ -1,43 +1,50 @@
 package kr.o3selab.smartlock.activities;
 
-import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.FirebaseDatabase;
+import com.wang.avi.AVLoadingIndicatorView;
+
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Vector;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.bluetooth.BLEHelper;
-import kr.o3selab.smartlock.common.AppSettings;
-import kr.o3selab.smartlock.common.Constants;
-import kr.o3selab.smartlock.common.Logs;
-import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.bluetooth.BLEReceiver;
+import kr.o3selab.smartlock.common.Extras;
+import kr.o3selab.smartlock.layouts.LoadingProgressDialog;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
-import kr.o3selab.smartlock.service.BTCTemplateService;
+import kr.o3selab.smartlock.models.Shakey;
+import kr.o3selab.smartlock.models.ValueEventAdapter;
+import kr.o3selab.smartlock.services.BLEService;
 
 public class ShakeyConnectActivity extends BaseActivity {
 
-    private BTCTemplateService myService;
-    public static final String TAG = "ShakeyConnectActivity";
+    private BLEHelper bleHelper;
 
     @BindView(R.id.shakey_connect_list)
     LinearLayout mListLayout;
     @BindView(R.id.shakey_connect_no_list)
     LinearLayout mNoFoundItemView;
+    @BindView(R.id.shakey_connect_search_button)
+    Button mSearchButton;
     @BindView(R.id.shakey_connect_progress)
-    View mProgress;
+    AVLoadingIndicatorView mProgress;
 
     private HashMap<String, BluetoothDevice> mDevices;
+    private LoadingProgressDialog loading;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,44 +52,55 @@ public class ShakeyConnectActivity extends BaseActivity {
         setContentView(R.layout.activity_shakey_connect);
 
         ButterKnife.bind(this);
-    }
 
-    @OnClick(R.id.shakey_register_button)
-    void register() {
-        if (!BLEHelper.getInstance().isBluetoothEnabled()) {
-            return;
-        }
-
+        bleHelper = BLEHelper.getInstance();
         mDevices = new HashMap<>();
-        mListLayout.removeAllViewsInLayout();
-
-        BLEHelper.getInstance().startLEScan(this, callback);
+        mProgress.hide();
     }
 
-    @OnClick(R.id.shakey_next_button)
+    @OnClick(R.id.shakey_connect_search_button)
+    void search() {
+        if (!bleHelper.isScanning()) {
+            if (!bleHelper.isBluetoothEnabled()) {
+                return;
+            }
+
+            mDevices = new HashMap<>();
+            mListLayout.removeAllViewsInLayout();
+
+            bleHelper.startLEScan(this, callback);
+        } else {
+            bleHelper.stopLEScan(callback);
+        }
+    }
+
+    @OnClick(R.id.shakey_connect_next_button)
     void close() {
-        onBackPressed();
+        if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
+        ShakeyConnectActivity.this.finish();
     }
 
     BLEHelper.BLEFindListener callback = new BLEHelper.BLEFindListener() {
         @Override
         public void onStart() {
-            mProgress.setVisibility(View.VISIBLE);
+            mDevices.clear();
+
+            mProgress.show();
+            mSearchButton.setText("검색중지");
         }
 
         @Override
         public void onEnd() {
-            mProgress.setVisibility(View.GONE);
+            mProgress.hide();
+            mSearchButton.setText("검색하기");
         }
 
         @Override
         public void onFind(BluetoothDevice device) {
-            Debug.d(String.valueOf(mDevices.size()));
             if (!mDevices.containsKey(device.getAddress())) {
                 mDevices.put(device.getAddress(), device);
                 mListLayout.addView(getBluetoothItemView(device));
             }
-
         }
     };
 
@@ -103,14 +121,8 @@ public class ShakeyConnectActivity extends BaseActivity {
                         .setTitle("연결시도")
                         .setMessage("Shakey 장치와 연결을 시도하시겠습니까?")
                         .setOptions(OptionsDialog.Options.YES_NO)
-                        .setBleDevice(device)
-                        .setOnClickListener(new OptionsDialog.OptionsDialogClickListener() {
-                            @Override
-                            public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
-                                dialog.dismiss();
-                                if (options.equals(OptionsDialog.ANSWER.NO)) return;
-                            }
-                        })
+                        .putExtras(Extras.BLE_DEVICE, device)
+                        .setOnClickListener(bluetoothItemClickListener)
                         .show();
             }
         });
@@ -118,40 +130,150 @@ public class ShakeyConnectActivity extends BaseActivity {
         return view;
     }
 
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Logs.d(TAG, "onActivityResult " + resultCode);
-        AppSettings.GATT_SUCCEESS = 0;
 
-        switch (requestCode) {
-            case Constants.REQUEST_CONNECT_DEVICE:
-                // 디바이스 리스트에서 요청된 디바이스로 연결
-                if (resultCode == Activity.RESULT_OK) {
-                    // 디바이스 어드레스로 인텐트에서 값 추출
-                    String address = data.getExtras().getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
-                    Logs.d(TAG, "연결할 mac 주소 :  " + address);
-                    // 장치 연결 시도
-                    if (myService == null) {
-                        Log.d(TAG, "myService NULL임 ");
-                    }
-                    if (address != null && myService != null) {
-                        Log.d(TAG, "Service 디바이스 연결 호출");
-                        AppSettings.GATT_SUCCEESS = 0;
-                        myService.connectDevice(address);
-                    }
-                }
-                break;
+    OptionsDialog.OnClickListener bluetoothItemClickListener = new OptionsDialog.OnClickListener() {
+        @Override
+        public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+            dialog.dismiss();
+            if (mProgress.isShown()) mProgress.smoothToHide();
+            if (options.equals(OptionsDialog.ANSWER.NO)) return;
 
-            case Constants.REQUEST_ENABLE_BT:
-                // 블루투스 반환을 요청하는 경우
-                if (resultCode == Activity.RESULT_OK) {
-                    // 블루투스는 지금, 사용하도록 설정된 BT 세션을 설정
-                    myService.setupBLE();
-                } else {
+            if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
 
-                    Logs.e(TAG, "블루투스가 꺼져있습니다");
-                    Toast.makeText(this, "블루투스가 꺼져있습니다 설정에서 블루투스를 켜주세요.", Toast.LENGTH_SHORT).show();
-                }
-                break;
+            loading = new LoadingProgressDialog(ShakeyConnectActivity.this);
+            loading.show();
+
+            BluetoothDevice device = (BluetoothDevice) dialog.getExtras(Extras.BLE_DEVICE);
+            if (device != null) connectBluetoothDevice(device);
         }
+    };
+
+    private void connectBluetoothDevice(final BluetoothDevice device) {
+        Intent bleIntent = new Intent(ShakeyConnectActivity.this, BLEService.class);
+
+        if (mBleService == null) bindService(bleIntent, mServiceConnection, BIND_AUTO_CREATE);
+        if (mBroadcastReceiver == null) {
+            mBroadcastReceiver = new BLEReceiver(new BLEReceiver.Callback() {
+                @Override
+                public void onConnect() {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(1000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            String requestKey = "get_key";
+                            mBleService.send(requestKey.getBytes());
+                        }
+                    }).start();
+                }
+
+                @Override
+                public void onDisconnect() {
+
+                }
+
+                @Override
+                public void onDataAvailable(String data) {
+                    receiveMessage(data);
+                }
+            });
+
+            registerReceiver(mBroadcastReceiver, BLEService.getIntentFilter());
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (mBleService == null) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException ignored) {
+
+                    }
+                }
+                mBleService.connect(device.getAddress());
+            }
+        }).start();
+
+    }
+
+    private void receiveMessage(String message) {
+        if (message.contains("secret+")) {
+
+            final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            if (user == null) return;
+
+            BluetoothDevice device = BLEHelper.getInstance().getBluetoothGatt().getDevice();
+
+            final String secretKey = message.substring(message.indexOf("+") + 1, message.length());
+
+            Shakey shakey = new Shakey();
+            shakey.setOwner(user.getUid());
+            shakey.setOwnerEmail(user.getEmail());
+            shakey.setName(device.getName());
+            shakey.setMac(device.getAddress());
+            shakey.setSecret(secretKey);
+            shakey.setLastOpen(null);
+            shakey.setRegdate(System.currentTimeMillis());
+
+            FirebaseDatabase.getInstance().getReference("Shakeys/" + secretKey).setValue(shakey);
+            FirebaseDatabase.getInstance().getReference("Owner/" + user.getUid()).addListenerForSingleValueEvent(new ValueEventAdapter(ShakeyConnectActivity.this) {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    ArrayList<String> list = (ArrayList<String>) dataSnapshot.getValue();
+                    list.add(secretKey);
+
+                    FirebaseDatabase.getInstance().getReference("Owner/" + user.getUid()).setValue(list);
+                }
+            });
+
+            mBleService.send(new String("get_key_ack").getBytes());
+            loading.dismiss();
+
+            new OptionsDialog.Builder(ShakeyConnectActivity.this)
+                    .setOptions(OptionsDialog.Options.YES)
+                    .setTitle("등록 완료")
+                    .setMessage("Shakey가 등록되었습니다.")
+                    .setCancelable(false)
+                    .setOnClickListener(new OptionsDialog.OnClickListener() {
+                        @Override
+                        public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                            dialog.dismiss();
+                            ShakeyConnectActivity.this.finish();
+                        }
+                    })
+                    .show();
+
+        } else if (message.equals("get_key_nack")) {
+            loading.dismiss();
+            mBleService.disconnect();
+            new OptionsDialog.Builder(ShakeyConnectActivity.this)
+                    .setTitle("등록 실패")
+                    .setOptions(OptionsDialog.Options.YES)
+                    .setMessage("Shakey 등록을 실패했습니다. 이미 등록된 Shakey 입니다.")
+                    .setCancelable(true)
+                    .setOnClickListener(new OptionsDialog.OnClickListener() {
+                        @Override
+                        public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                            dialog.dismiss();
+                        }
+                    })
+                    .show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
+
+        if (mBroadcastReceiver != null) {
+            unregisterReceiver(mBroadcastReceiver);
+            mBroadcastReceiver = null;
+        }
+
+        super.onDestroy();
     }
 }

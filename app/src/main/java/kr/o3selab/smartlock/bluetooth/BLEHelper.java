@@ -2,6 +2,8 @@ package kr.o3selab.smartlock.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
@@ -13,17 +15,25 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 
 import java.util.List;
+import java.util.UUID;
 
 import kr.o3selab.smartlock.common.utils.Debug;
 
 public class BLEHelper {
+
+    public static String shortUuidFormat = "0000%04X-0000-1000-8000-00805F9B34FB";
+
+    public static UUID sixteenBitUuid(long shortUuid) {
+        assert shortUuid >= 0 && shortUuid <= 0xFFFF;
+        return UUID.fromString(String.format(shortUuidFormat, shortUuid & 0xFFFF));
+    }
 
     public static final int BLE_STATUS_SUCCESS = 0;
 
     public static final int BLE_NOT_SUPPORT = 1;
     public static final int BLE_NOT_ENABLED = 2;
 
-    public static volatile BLEHelper instance;
+    private static volatile BLEHelper instance;
 
     public static BLEHelper getInstance() {
         if (instance == null) instance = new BLEHelper();
@@ -32,6 +42,9 @@ public class BLEHelper {
 
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
+
+    private BluetoothGatt mBluetoothGatt;
+    private BluetoothGattService mBluetoothGattService;
 
     private ScanCallback scanCallback;
     private BluetoothAdapter.LeScanCallback leScanCallback;
@@ -117,8 +130,6 @@ public class BLEHelper {
             public void onScanResult(int callbackType, ScanResult result) {
                 listener.onFind(result.getDevice());
                 Debug.d("LEScanner : " + result.getDevice().getAddress() + ", " + result.getDevice().getName());
-                if (result.getScanRecord() != null)
-                    Debug.d("LEScanner : " + result.getScanRecord().toString());
             }
 
             @Override
@@ -159,6 +170,19 @@ public class BLEHelper {
         return mBluetoothAdapter != null && mBluetoothAdapter.isEnabled();
     }
 
+    public void setGattInfo(BluetoothGatt gatt, BluetoothGattService service) {
+        mBluetoothGatt = gatt;
+        mBluetoothGattService = service;
+    }
+
+    public BluetoothGatt getBluetoothGatt() {
+        return mBluetoothGatt;
+    }
+
+    public BluetoothGattService getBluetoothGattService() {
+        return mBluetoothGattService;
+    }
+
     public interface BLEFindListener {
         void onStart();
 
@@ -166,5 +190,6 @@ public class BLEHelper {
 
         void onFind(BluetoothDevice device);
     }
+
 
 }

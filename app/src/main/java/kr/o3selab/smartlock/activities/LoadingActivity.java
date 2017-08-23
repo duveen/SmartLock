@@ -11,6 +11,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.gun0912.tedpermission.PermissionListener;
 import com.gun0912.tedpermission.TedPermission;
 
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.common.utils.Utils;
+import kr.o3selab.smartlock.services.FCMIDService;
 
 public class LoadingActivity extends BaseActivity {
 
@@ -29,8 +31,6 @@ public class LoadingActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
-
-        Debug.d(String.valueOf(System.currentTimeMillis()));
 
         Utils.getAppKeyHash(this);
 
@@ -89,6 +89,8 @@ public class LoadingActivity extends BaseActivity {
             } else {
                 Debug.d("Login: Start Main Activity (UID:" + user.getUid() + ")");
                 startActivity(new Intent(LoadingActivity.this, MainActivity.class));
+
+                FCMIDService.checkFCMToken(FirebaseInstanceId.getInstance().getToken());
             }
 
             LoadingActivity.this.finish();

@@ -1,7 +1,6 @@
 package kr.o3selab.smartlock.layouts;
 
 import android.app.Dialog;
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,18 +10,18 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import java.util.HashMap;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
-import kr.o3selab.smartlock.models.Shakey;
 
 
 public class OptionsDialog extends Dialog {
 
     private WindowManager.LayoutParams mLayoutParams;
-    private Shakey shakey;
-    private BluetoothDevice bleDevice;
+    private HashMap<String, Object> extras;
 
     @BindView(R.id.custom_dialog_title)
     TextView mTitleView;
@@ -33,7 +32,7 @@ public class OptionsDialog extends Dialog {
     @BindView(R.id.custom_dialog_no)
     TextView mNoTextView;
 
-    OptionsDialogClickListener listener;
+    OnClickListener listener;
 
     public static class Builder {
         OptionsDialog dialog;
@@ -52,8 +51,8 @@ public class OptionsDialog extends Dialog {
             return this;
         }
 
-        public Builder setShakey(Shakey shakey) {
-            dialog.setShakey(shakey);
+        public Builder putExtras(String key, Object value) {
+            dialog.putExtras(key, value);
             return this;
         }
 
@@ -67,16 +66,12 @@ public class OptionsDialog extends Dialog {
             return this;
         }
 
-        public Builder setBleDevice(BluetoothDevice device) {
-            return this;
-        }
-
         public Builder setOptions(Options options) {
             dialog.setOptions(options);
             return this;
         }
 
-        public Builder setOnClickListener(OptionsDialogClickListener listener) {
+        public Builder setOnClickListener(OnClickListener listener) {
             dialog.setOnClickListener(listener);
             return this;
         }
@@ -106,6 +101,8 @@ public class OptionsDialog extends Dialog {
             mLayoutParams.width = width;
             mLayoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT;
         }
+
+        extras = new HashMap<>();
     }
 
     @Override
@@ -121,20 +118,12 @@ public class OptionsDialog extends Dialog {
         mTitleView.setText(title);
     }
 
-    private void setShakey(Shakey shakey) {
-        this.shakey = shakey;
+    private void putExtras(String key, Object value) {
+        extras.put(key, value);
     }
 
-    public Shakey getShakey() {
-        return shakey;
-    }
-
-    private void setBleDevice(BluetoothDevice device) {
-        this.bleDevice = device;
-    }
-
-    public BluetoothDevice getBleDevice() {
-        return bleDevice;
+    public Object getExtras(String key) {
+        return extras.get(key);
     }
 
     private void setMessage(@Nullable CharSequence message) {
@@ -145,7 +134,7 @@ public class OptionsDialog extends Dialog {
         mContentView.setText(resId);
     }
 
-    private void setOnClickListener(OptionsDialogClickListener listener) {
+    private void setOnClickListener(OnClickListener listener) {
         this.listener = listener;
     }
 
@@ -170,7 +159,7 @@ public class OptionsDialog extends Dialog {
         if (listener != null) listener.onClick(this, ANSWER.NO);
     }
 
-    public interface OptionsDialogClickListener {
+    public interface OnClickListener {
         void onClick(OptionsDialog dialog, ANSWER options);
     }
 

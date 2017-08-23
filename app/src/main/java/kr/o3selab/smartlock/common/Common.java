@@ -1,30 +1,14 @@
 package kr.o3selab.smartlock.common;
 
-import android.app.Activity;
-import android.content.Context;
-
 import java.util.Vector;
 
 import kr.o3selab.smartlock.models.Shakey;
-import kr.o3selab.smartlock.service.BTCTemplateService;
+import kr.o3selab.smartlock.services.BTCTemplateService;
 
 public class Common {
 
     // 개발자 모드
     public boolean debug = true;
-
-    // 정보 로딩
-    private Activity activity;
-
-    public void setActivity(Activity activity) {
-        this.activity = activity;
-    }
-
-    private Context context;
-
-    public void setContext(Context context) {
-        this.context = context;
-    }
 
     // 버전 정보
     public double version = 1.0000;

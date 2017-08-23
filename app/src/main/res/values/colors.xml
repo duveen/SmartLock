@@ -3,9 +3,10 @@
 <resources>
 
     <color name="colorPrimary">#f65a4e</color>
-    <color name="colorPrimaryWithTransparent">#AA448AFF</color>
-    <color name="colorPrimaryDark">@color/blue_A400</color>
+    <color name="colorPrimaryWithTransparent">#aace4036</color>
+    <color name="colorPrimaryDark">#ce4036</color>
     <color name="colorAccent">#474747</color>
+    <color name="transparent">#00000000</color>
 
     <color name="red_50">#FFEBEE</color>
     <color name="red_100">#FFCDD2</color>

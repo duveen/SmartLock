@@ -21,7 +21,6 @@ public class Shakey implements Serializable {
 
     }
 
-
     @Override
     public String toString() {
         return "Shakey {" +
@@ -112,7 +111,9 @@ public class Shakey implements Serializable {
         this.ownerEmail = ownerEmail;
     }
 
-    private static String toDate(long time) {
+    private static String toDate(Long time) {
+        if (time == null) return "정보없음";
+
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA);
         return sdf.format(new Date(time));
     }

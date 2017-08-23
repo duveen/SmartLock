@@ -11,9 +11,9 @@ import kr.o3selab.smartlock.common.utils.Debug;
 
 public class ValueEventAdapter implements ValueEventListener {
 
-    Context mContext;
+    private Context mContext;
 
-    public ValueEventAdapter(Context context) {
+    protected ValueEventAdapter(Context context) {
         mContext = context;
     }
 

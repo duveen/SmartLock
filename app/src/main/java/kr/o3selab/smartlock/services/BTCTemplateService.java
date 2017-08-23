@@ -1,6 +1,6 @@
 
 
-package kr.o3selab.smartlock.service;
+package kr.o3selab.smartlock.services;
 
 import android.app.Notification;
 import android.app.NotificationManager;

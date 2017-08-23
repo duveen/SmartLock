@@ -1,21 +1,12 @@
 package kr.o3selab.smartlock.activities;
 
 
-import android.app.Dialog;
-import android.bluetooth.BluetoothAdapter;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
@@ -38,16 +29,15 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import kr.o3selab.smartlock.R;
-import kr.o3selab.smartlock.common.AppSettings;
-import kr.o3selab.smartlock.common.Constants;
 import kr.o3selab.smartlock.common.Extras;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
 import kr.o3selab.smartlock.models.Shakey;
+import kr.o3selab.smartlock.models.ShakeyAlert;
 import kr.o3selab.smartlock.models.ShakeyLog;
 import kr.o3selab.smartlock.models.ShakeyShare;
 import kr.o3selab.smartlock.models.ValueEventAdapter;
-import kr.o3selab.smartlock.service.BTCTemplateService;
+import kr.o3selab.smartlock.services.BLEService;
 
 
 public class MainActivity extends BaseActivity {
@@ -55,8 +45,8 @@ public class MainActivity extends BaseActivity {
     public static final String TAG = "MainActivity";
 
     Context mContext;
-    private BTCTemplateService myService;
-    private ActivityHandler mActivityHandler;
+
+    private Shakey mShakey;
 
     private FirebaseUser mUser;
     private FirebaseDatabase mFirebaseInstance;
@@ -90,15 +80,17 @@ public class MainActivity extends BaseActivity {
         ButterKnife.bind(this);
 
         mContext = this;
-        mActivityHandler = new ActivityHandler();
 
         mUser = FirebaseAuth.getInstance().getCurrentUser();
         mFirebaseInstance = FirebaseDatabase.getInstance();
 
-        shakeyUnConnected();
-
         getShakeys();
-        // doStartService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateUI();
     }
 
     @OnClick(R.id.activity_main_ic_menu)
@@ -179,29 +171,6 @@ public class MainActivity extends BaseActivity {
                 }
             }
         });
-
-        /*if
-
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle("연결알림")
-                                .setMessage(shakey.getName() + "에 연결하시겠습니까?")
-                                .setPositiveButton("네", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        shakeyInfoUpdate(shakey, Dialog.BUTTON_POSITIVE);
-                                    }
-                                })
-                                .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        shakeyInfoUpdate(shakey, Dialog.BUTTON_NEGATIVE);
-                                    }
-                                })
-                                .show();
-                    }
-                });
-            }
-        }*/
     }
 
     private View getShakeyItemView(Shakey shakey) {
@@ -230,25 +199,77 @@ public class MainActivity extends BaseActivity {
                     .setTitle("알림")
                     .setMessage(shakey.getName() + "와 지금 연결하시겠습니까?")
                     .setOptions(OptionsDialog.Options.YES_NO)
-                    .setOnClickListener(optionsDialogClickListener)
-                    .setShakey(shakey)
+                    .setOnClickListener(onClickListener)
+                    .putExtras(Extras.SHAKEY, shakey)
                     .show();
         }
     }
 
-    OptionsDialog.OptionsDialogClickListener optionsDialogClickListener = new OptionsDialog.OptionsDialogClickListener() {
+
+    OptionsDialog.OnClickListener onClickListener = new OptionsDialog.OnClickListener() {
         @Override
         public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
             dialog.dismiss();
             closeMenu();
 
-            drawShakeyInfo(dialog.getShakey().getSecret());
+            mShakey = (Shakey) dialog.getExtras(Extras.SHAKEY);
+            drawShakeyInfo(mShakey.getSecret());
 
             if (options.equals(OptionsDialog.ANSWER.YES)) {
-                // 확인 눌렸을때
+
+                Intent bleIntent = new Intent(MainActivity.this, BLEService.class);
+                bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
+
+                setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
+                    @Override
+                    public void onServiceConnected(BLEService service) {
+                        service.connect(mShakey.getMac());
+                    }
+
+                    @Override
+                    public void onServiceDisconnected() {
+
+                    }
+                });
             }
         }
     };
+
+    /*public final BroadcastReceiver shakeyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            switch (action) {
+                case BLEService.BLE_CONNECTED:
+                    Debug.d("BLE_CONNECTED");
+                    shakeyKeyView.clearColorFilter();
+                    shakeyKeyView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            openShakey(mShakey);
+                        }
+                    });
+                    break;
+
+                case BLEService.BLE_DISCONNECTED:
+                    Debug.d("BLE_DISCONNECTED");
+                    shakeyKeyView.setOnClickListener(null);
+                    shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
+
+                    isRunningReceiver = false;
+                    unregisterReceiver(shakeyReceiver);
+                    unbindService(shakeyConnection);
+                    break;
+
+                case BLEService.BLE_DATA_AVAILABLE:
+                    Debug.d("BLE_DATA_AVAILABLE");
+                    byte[] data = intent.getByteArrayExtra(BLEService.BLE_EXTRA_DATA);
+                    String message = HexAsciiHelper.bytesToHex(data);
+                    break;
+            }
+        }
+    };*/
 
     private void drawShakeyInfo(String secret) {
         FirebaseDatabase.getInstance().getReference("Shakeys/" + secret).addListenerForSingleValueEvent(new ValueEventAdapter(this) {
@@ -258,7 +279,7 @@ public class MainActivity extends BaseActivity {
 
                 if (shakey == null) {
                     Toast.makeText(MainActivity.this, "Shakey 정보를 불러오지 못했습니다.", Toast.LENGTH_SHORT).show();
-                    shakeyUnConnected();
+                    updateUI();
                     return;
                 }
 
@@ -278,14 +299,6 @@ public class MainActivity extends BaseActivity {
             }
         });
 
-        shakeyKeyView.clearColorFilter();
-        shakeyKeyView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                updateShakeyInfo(shakey);
-            }
-        });
-
         shakeyShareView.clearColorFilter();
         shakeyShareView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -296,7 +309,7 @@ public class MainActivity extends BaseActivity {
 
     }
 
-    private void updateShakeyInfo(Shakey shakey) {
+    private void openShakey(Shakey shakey) {
 
         final long openTime = System.currentTimeMillis();
 
@@ -330,6 +343,12 @@ public class MainActivity extends BaseActivity {
             }
         });
 
+        if (!mUser.getUid().equals(shakey.getOwner())) {
+            ShakeyAlert.getInstance().alert(this, shakey);
+        }
+
+        mBleService.send(shakey.getSecret().getBytes());
+
         drawShakeyInfo(shakey);
     }
 
@@ -349,174 +368,24 @@ public class MainActivity extends BaseActivity {
         else super.onBackPressed();
     }
 
-
-    /**
-     * 서비스 등록
-     */
-    private void doStartService() {
-        Log.d(TAG, "# Activity - doStartService()");
-        startService(new Intent(this, BTCTemplateService.class));
-        bindService(new Intent(this, BTCTemplateService.class), mServiceConn, Context.BIND_AUTO_CREATE);
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
     }
 
-    /**
-     * 서비스 중지
-     */
-    private void doStopService() {
-        Log.d(TAG, "# Activity - doStopService()");
-        myService.finalizeService();
-        stopService(new Intent(this, BTCTemplateService.class));
-    }
+    public void updateUI() {
+        if (mBleService == null) {
+            shakeyInfoNameView.setText("연결된 Shakey 없음");
 
-    /**
-     * 서비스 연결
-     */
-    private ServiceConnection mServiceConn = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder binder) {
-            Log.d(TAG, "Activity - Service connected");
+            shakeyInfoView.setOnClickListener(null);
 
-            myService = ((BTCTemplateService.ServiceBinder) binder).getService();
-            // common.service = myService;
-            initialize();
-        }
+            shakeyShareView.setOnClickListener(null);
+            shakeyShareView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
 
-        public void onServiceDisconnected(ComponentName className) {
-            myService = null;
-        }
-    };
+            shakeyKeyView.setOnClickListener(null);
+            shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
+        } else {
 
-
-    private void initialize() {
-        Toast.makeText(this, "Initialize 시작", Toast.LENGTH_SHORT).show();
-        //ble지원 기기 인지 확인
-        if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "ble를 지원하지 않습니다.", Toast.LENGTH_SHORT).show();
-            finish();
-        }
-
-        //######서비스 실행부분!!!!!!
-        myService.setupService(mActivityHandler);
-
-        //블루투스 꺼져잇을경우 켜기
-        if (!myService.isBluetoothEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, Constants.REQUEST_ENABLE_BT);
         }
     }
-
-
-    public void shakeyInfoUpdate(final Shakey shakey, int flag) {
-
-        shakeyInfoView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ShakeyInfoActivity.class);
-                intent.putExtra("info", shakey);
-
-                startActivity(intent);
-            }
-        });
-
-        shakeyLastOpenView.setText("마지막으로 연 시간 : " + shakey.getLastOpen());
-
-        switch (flag) {
-            case Dialog.BUTTON_NEGATIVE:
-                shakeyKeyView.setOnClickListener(null);
-                shakeyShareView.setOnClickListener(null);
-                break;
-
-            case Dialog.BUTTON_POSITIVE:
-                AppSettings.setSettingsValue(AppSettings.SETTINGS_SECRETKEY, false, 0, shakey.getMac() + "$$" + shakey.getSecret());
-                myService.connectDevice(shakey.getMac());
-                // common.service = myService;
-                shakeyKeyView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        myService.sendMessageToRemote(shakey.getSecret());
-                    }
-                });
-
-                shakeyShareView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Toast.makeText(mContext, "개발 중", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                break;
-
-        }
-        mDrawerLayout.closeDrawer(Gravity.START);
-
-    }
-
-
-    public void shakeyUnConnected() {
-        shakeyInfoNameView.setText("연결된 Shakey 없음");
-
-        shakeyInfoView.setOnClickListener(null);
-
-        shakeyShareView.setOnClickListener(null);
-        shakeyShareView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
-
-        shakeyKeyView.setOnClickListener(null);
-        shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
-    }
-
-
-    /*****************************************************
-     * Handler, Callback, Sub-classes
-     ******************************************************/
-
-    public class ActivityHandler extends Handler {
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case Constants.MESSAGE_BT_STATE_INITIALIZED:
-                    Toast.makeText(mContext, new String("초기화"), Toast.LENGTH_LONG).show();
-                    break;
-
-                case Constants.MESSAGE_BT_STATE_LISTENING:
-                    Toast.makeText(mContext, new String("대기중"), Toast.LENGTH_LONG).show();
-                    break;
-
-                case Constants.MESSAGE_BT_STATE_CONNECTING:
-                    Toast.makeText(mContext, new String("연결중"), Toast.LENGTH_LONG).show();
-                    break;
-
-                case Constants.MESSAGE_BT_STATE_CONNECTED:
-                    if (myService != null) {
-                        String deviceName = myService.getDeviceName();
-                        if (deviceName != null) {
-                            Toast.makeText(mContext, new String("블루투스 장치 : " + "연결됨" + " " + deviceName), Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(mContext, new String("블루투스 장치 : " + "연결됨" + " " + "No Name"), Toast.LENGTH_LONG).show();
-                        }
-                    }
-                    break;
-
-                case Constants.MESSAGE_BT_STATE_ERROR:
-                    Toast.makeText(mContext, new String("에러"), Toast.LENGTH_LONG).show();
-                    break;
-
-                case Constants.MESSAGE_CMD_ERROR_NOT_CONNECTED:
-                    Toast.makeText(mContext, new String("커맨드 에러"), Toast.LENGTH_LONG).show();
-                    break;
-
-                case Constants.MESSAGE_READ_CHAT_DATA:
-                    if (msg.obj != null) {
-                        Log.d(TAG, (String) msg.obj);
-                        Toast.makeText(mContext, (String) msg.obj, Toast.LENGTH_LONG).show();
-                    } else {
-                        Log.d(TAG, "수신 메세지 널");
-                    }
-                    break;
-
-                default:
-                    break;
-            }
-            super.handleMessage(msg);
-        }
-    }
-
-
 }

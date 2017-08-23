@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package kr.o3selab.smartlock.service;
+package kr.o3selab.smartlock.services;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;

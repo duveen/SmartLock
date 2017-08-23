@@ -4,4 +4,5 @@
     <string name="google_oauth_key" templateMergeStrategy="preserve" translatable="false">347166651116-ph5qn6fmtroe0inpgkqjhs5grpeui5nj.apps.googleusercontent.com</string>
     <string name="google_oauth_key_mac" templateMergeStrategy="preserve" translatable="false">347166651116-tkkni5c8elff87d2u2lmi5965t913bgu.apps.googleusercontent.com</string>
 
+    <string name="fcm_key" templateMergeStrategy="preserve" translatable="false">AAAAUNS-suw:APA91bEvuJCAlo4Y3DPEdzRfVhrnpnrzOdUnDbQ3g_zff6QGaNt2MaElCv2DYu-EovC9h5gHbienxQalCiBjF6Xfd9f5l72NUFyfMTn66313qyrecgytUvmzyzRXxRHFqG9rQshYEDa-</string>
 </resources>
