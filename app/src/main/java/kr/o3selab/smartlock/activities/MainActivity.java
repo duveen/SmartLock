@@ -25,7 +25,6 @@ import com.google.firebase.database.MutableData;
 import com.google.firebase.database.Transaction;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -307,17 +306,17 @@ public class MainActivity extends BaseActivity {
 
     private void showShakeyOptions() {
 
-        LinkedList<String> menuList = new LinkedList<>();
-        menuList.add("정보 확인");
-        menuList.add("이름 변경");
+        CharSequence[] menuList = new CharSequence[4];
+        menuList[0] = "정보 확인";
+        menuList[1] = "이름 변경";
 
         if (mBleService != null) {
-            menuList.add("민감도 값 설정");
-            menuList.add("Shakey 삭제");
+            menuList[2] = "민감도 값 설정";
+            menuList[3] = "Shakey 삭제";
         }
 
         new AlertDialog.Builder(this)
-                .setSingleChoiceItems((CharSequence[]) menuList.toArray(), 0, new DialogInterface.OnClickListener() {
+                .setSingleChoiceItems(menuList, 0, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
@@ -417,7 +416,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void updateUI() {
-        if (mBleService.isConnecting()) {
+        if (mBleService != null && mBleService.isConnecting()) {
             drawShakeyInfo();
         } else {
             shakeyInfoNameView.setText("연결된 Shakey 없음");
