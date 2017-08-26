@@ -45,12 +45,15 @@ public class BLEService extends Service {
     public static final UUID UUID_DISCONNECT = BLEHelper.sixteenBitUuid(0x2223);
     public static final UUID UUID_CLIENT_CONFIGURATION = BLEHelper.sixteenBitUuid(0x2902);
 
+    private boolean isConnectState = false;
+
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mBluetoothGatt.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                isConnectState = false;
                 broadcastUpdate(BLE_DISCONNECTED);
             }
         }
@@ -80,6 +83,7 @@ public class BLEService extends Service {
                 }
 
                 BLEHelper.getInstance().setGattInfo(mBluetoothGatt, mBluetoothGattService);
+                isConnectState = true;
                 broadcastUpdate(BLE_CONNECTED);
             }
         }
@@ -189,8 +193,8 @@ public class BLEService extends Service {
         mBluetoothGatt.disconnect();
     }
 
-    public boolean isConnecting() {
-        return mBluetoothGatt != null;
+    public boolean isConnected() {
+        return isConnectState;
     }
 
     /**

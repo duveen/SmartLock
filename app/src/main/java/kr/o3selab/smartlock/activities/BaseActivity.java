@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 
 import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.layouts.LoadingProgressDialog;
 import kr.o3selab.smartlock.services.BLEService;
 import kr.o3selab.smartlock.services.ShakeyServiceConnectionCallback;
 
@@ -19,7 +20,8 @@ public class BaseActivity extends AppCompatActivity {
 
     protected static BLEService mBleService;
 
-    private ShakeyServiceConnectionCallback callback;
+    public LoadingProgressDialog loading;
+    private ShakeyServiceConnectionCallback serviceCallback;
 
     public final String TAG = this.getClass().getSimpleName();
 
@@ -36,7 +38,7 @@ public class BaseActivity extends AppCompatActivity {
     }
 
     public void setShakeyServiceConnectionCallback(ShakeyServiceConnectionCallback callback) {
-        this.callback = callback;
+        this.serviceCallback = callback;
     }
 
     public ServiceConnection getServiceConnection() {
@@ -47,13 +49,13 @@ public class BaseActivity extends AppCompatActivity {
                     mBleService = ((BLEService.LocalBinder) service).getService();
                     mBleService.initialize();
 
-                    if (callback != null) callback.onServiceConnected(mBleService);
+                    if (serviceCallback != null) serviceCallback.onServiceConnected(mBleService);
                 }
 
                 @Override
                 public void onServiceDisconnected(ComponentName name) {
                     mBleService = null;
-                    if (callback != null) callback.onServiceDisconnected();
+                    if (serviceCallback != null) serviceCallback.onServiceDisconnected();
                 }
             };
         }

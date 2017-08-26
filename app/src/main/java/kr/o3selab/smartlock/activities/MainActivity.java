@@ -33,6 +33,7 @@ import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
 import kr.o3selab.smartlock.common.Extras;
 import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.layouts.LoadingProgressDialog;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
 import kr.o3selab.smartlock.models.Shakey;
 import kr.o3selab.smartlock.models.ShakeyAlert;
@@ -46,13 +47,6 @@ import kr.o3selab.smartlock.services.ShakeyServiceConnectionCallback;
 public class MainActivity extends BaseActivity {
 
     public static final String TAG = "MainActivity";
-
-    Context mContext;
-
-    private Shakey mShakey;
-
-    private FirebaseUser mUser;
-    private FirebaseDatabase mFirebaseInstance;
 
     @BindView(R.id.main_drawer)
     DrawerLayout mDrawerLayout;
@@ -75,6 +69,15 @@ public class MainActivity extends BaseActivity {
     @BindView(R.id.fragment_shakey_share)
     ImageView shakeyShareView;
 
+    Context mContext;
+
+    private Shakey mShakey;
+
+    private FirebaseUser mUser;
+    private FirebaseDatabase mFirebaseInstance;
+
+    private boolean isShakeyConnected;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,6 +86,9 @@ public class MainActivity extends BaseActivity {
         ButterKnife.bind(this);
 
         mContext = this;
+        isShakeyConnected = false;
+
+        loading = new LoadingProgressDialog(this);
 
         mUser = FirebaseAuth.getInstance().getCurrentUser();
         mFirebaseInstance = FirebaseDatabase.getInstance();
@@ -216,25 +222,36 @@ public class MainActivity extends BaseActivity {
             dialog.dismiss();
             closeMenu();
 
+            if (isShakeyConnected) {
+                mBleService.disconnect();
+                shakeyReceiverCallback.onDisconnect();
+            }
+
             mShakey = (Shakey) dialog.getExtras(Extras.SHAKEY);
             drawShakeyInfo(mShakey.getSecret());
 
             if (options.equals(OptionsDialog.ANSWER.YES)) {
-                setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
-                    @Override
-                    public void onServiceConnected(BLEService service) {
-                        service.setShakeyReceiver(new ShakeyReceiver(shakeyReceiverCallback));
-                        service.connect(mShakey.getMac());
-                    }
+                if (!loading.isShowing()) loading.show();
 
-                    @Override
-                    public void onServiceDisconnected() {
+                if (mBleService == null) {
+                    setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
+                        @Override
+                        public void onServiceConnected(BLEService service) {
+                            service.setShakeyReceiver(new ShakeyReceiver(shakeyReceiverCallback));
+                            service.connect(mShakey.getMac());
+                        }
 
-                    }
-                });
+                        @Override
+                        public void onServiceDisconnected() {
 
-                Intent bleIntent = new Intent(MainActivity.this, BLEService.class);
-                bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
+                        }
+                    });
+
+                    Intent bleIntent = new Intent(MainActivity.this, BLEService.class);
+                    bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
+                } else {
+                    mBleService.connect(mShakey.getMac());
+                }
             }
         }
     };
@@ -243,7 +260,8 @@ public class MainActivity extends BaseActivity {
         @Override
         public void onConnect() {
             Debug.d("BLE_CONNECTED");
-
+            if (loading.isShowing()) loading.dismiss();
+            isShakeyConnected = true;
             shakeyKeyView.clearColorFilter();
             shakeyKeyView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -256,15 +274,33 @@ public class MainActivity extends BaseActivity {
         @Override
         public void onDisconnect() {
             Debug.d("BLE_DISCONNECTED");
+
+            if (loading.isShowing()) {
+                new OptionsDialog.Builder(mContext)
+                        .setTitle("연결실패")
+                        .setMessage("Shakey 연결에 실패했습니다.")
+                        .setOptions(OptionsDialog.Options.YES)
+                        .setOnClickListener(new OptionsDialog.OnClickListener() {
+                            @Override
+                            public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                                dialog.dismiss();
+                            }
+                        }).show();
+
+                loading.dismiss();
+            }
+
+            isShakeyConnected = false;
             shakeyKeyView.setOnClickListener(null);
             shakeyKeyView.setColorFilter(ContextCompat.getColor(mContext, R.color.gray9));
-
-            unbindService(getServiceConnection());
         }
 
         @Override
         public void onDataAvailable(String data) {
             Debug.d("BLE_DATA_AVAILABLE");
+            if (data.equals("tu")) {
+                openShakey();
+            }
         }
     };
 
@@ -416,7 +452,7 @@ public class MainActivity extends BaseActivity {
     }
 
     public void updateUI() {
-        if (mBleService != null && mBleService.isConnecting()) {
+        if (mBleService != null && mBleService.isConnected()) {
             drawShakeyInfo();
         } else {
             shakeyInfoNameView.setText("연결된 Shakey 없음");

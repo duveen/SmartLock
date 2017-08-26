@@ -20,8 +20,8 @@ public class Shakey implements Serializable {
 
     private static String REQUEST_SECRET_KEY = "K0";
     private static String RESPONSE_RECEIVE_SECRET_KEY = "K1";
-    private static String REQUEST_UNLOCK = "U0";
-    private static String REQUEST_RESET = "U1";
+    private static String REQUEST_UNLOCK = "R0";
+    private static String REQUEST_RESET = "R1";
     private static String SET_SENS_VALUE = "S0";
 
     private String owner;
@@ -158,8 +158,10 @@ public class Shakey implements Serializable {
     }
 
     public byte[] unlockCommand() {
-        String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
-        return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
+        // String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
+        // return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
+
+        return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append("00".getBytes()).append(getSecret().getBytes()).toByteArray();
     }
 
     public byte[] resetCommand() {

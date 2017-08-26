@@ -24,6 +24,7 @@ import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.bluetooth.BLEHelper;
 import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
 import kr.o3selab.smartlock.common.Extras;
+import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.layouts.LoadingProgressDialog;
 import kr.o3selab.smartlock.layouts.OptionsDialog;
 import kr.o3selab.smartlock.models.Shakey;
@@ -45,8 +46,17 @@ public class ShakeyConnectActivity extends BaseActivity {
     AVLoadingIndicatorView mProgress;
 
     private HashMap<String, BluetoothDevice> mDevices;
-    private LoadingProgressDialog loading;
     private ConnectTimer mTimer;
+
+    private BLEHelper.BLEFindListener callback;
+
+    private boolean isDialogShowing;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mDevices = new HashMap<>();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +66,11 @@ public class ShakeyConnectActivity extends BaseActivity {
         ButterKnife.bind(this);
 
         bleHelper = BLEHelper.getInstance();
-        mDevices = new HashMap<>();
         mProgress.hide();
+
+        loading = new LoadingProgressDialog(ShakeyConnectActivity.this);
+
+        isDialogShowing = false;
     }
 
     @OnClick(R.id.shakey_connect_search_button)
@@ -67,9 +80,34 @@ public class ShakeyConnectActivity extends BaseActivity {
                 return;
             }
 
-            mDevices = new HashMap<>();
-            mListLayout.removeAllViewsInLayout();
+            callback = new BLEHelper.BLEFindListener() {
 
+                @Override
+                public void onStart() {
+                    Debug.d("onStart()");
+                    mDevices.clear();
+
+                    mProgress.show();
+                    mSearchButton.setText("검색중지");
+                }
+
+                @Override
+                public void onEnd() {
+                    mProgress.hide();
+                    mSearchButton.setText("검색하기");
+                }
+
+                @Override
+                public void onFind(BluetoothDevice device) {
+                    Debug.d("onFind()");
+                    if (!mDevices.containsKey(device.getAddress())) {
+                        mDevices.put(device.getAddress(), device);
+                        mListLayout.addView(getBluetoothItemView(device));
+                    }
+                }
+            };
+
+            mListLayout.removeAllViewsInLayout();
             bleHelper.startLEScan(this, callback);
         } else {
             bleHelper.stopLEScan(callback);
@@ -79,32 +117,25 @@ public class ShakeyConnectActivity extends BaseActivity {
     @OnClick(R.id.shakey_connect_next_button)
     void close() {
         if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
+
+        if (mBleService != null && !mBleService.isConnected()) {
+            unbindService(getServiceConnection());
+            mBleService = null;
+        }
+
+        callback = null;
         ShakeyConnectActivity.this.finish();
     }
 
-    BLEHelper.BLEFindListener callback = new BLEHelper.BLEFindListener() {
-        @Override
-        public void onStart() {
-            mDevices.clear();
-
-            mProgress.show();
-            mSearchButton.setText("검색중지");
+    @Override
+    public void onBackPressed() {
+        if (isDialogShowing) {
+            super.onBackPressed();
+            return;
         }
 
-        @Override
-        public void onEnd() {
-            mProgress.hide();
-            mSearchButton.setText("검색하기");
-        }
-
-        @Override
-        public void onFind(BluetoothDevice device) {
-            if (!mDevices.containsKey(device.getAddress())) {
-                mDevices.put(device.getAddress(), device);
-                mListLayout.addView(getBluetoothItemView(device));
-            }
-        }
-    };
+        close();
+    }
 
     private View getBluetoothItemView(final BluetoothDevice device) {
         View view = getLayoutInflater().inflate(R.layout.item_shakey_add_list, null);
@@ -119,6 +150,7 @@ public class ShakeyConnectActivity extends BaseActivity {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isDialogShowing = true;
                 new OptionsDialog.Builder(ShakeyConnectActivity.this)
                         .setTitle("연결시도")
                         .setMessage("Shakey 장치와 연결을 시도하시겠습니까?")
@@ -135,13 +167,14 @@ public class ShakeyConnectActivity extends BaseActivity {
     OptionsDialog.OnClickListener bluetoothItemClickListener = new OptionsDialog.OnClickListener() {
         @Override
         public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+            isDialogShowing = false;
             dialog.dismiss();
             if (mProgress.isShown()) mProgress.smoothToHide();
             if (options.equals(OptionsDialog.ANSWER.NO)) return;
 
             if (bleHelper.isScanning()) bleHelper.stopLEScan(callback);
 
-            loading = new LoadingProgressDialog(ShakeyConnectActivity.this);
+            isDialogShowing = true;
             loading.show();
 
             BluetoothDevice device = (BluetoothDevice) dialog.getExtras(Extras.BLE_DEVICE);
@@ -151,6 +184,14 @@ public class ShakeyConnectActivity extends BaseActivity {
     };
 
     private void connectBluetoothDevice(final BluetoothDevice device) {
+
+        if (mBleService != null) {
+            mBleService.connect(device.getAddress());
+            mTimer = new ConnectTimer();
+            mTimer.start();
+
+            return;
+        }
 
         setShakeyServiceConnectionCallback(new ShakeyServiceConnectionCallback() {
             @Override
@@ -167,7 +208,7 @@ public class ShakeyConnectActivity extends BaseActivity {
         });
 
         Intent bleIntent = new Intent(ShakeyConnectActivity.this, BLEService.class);
-        if (mBleService == null) bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
+        bindService(bleIntent, getServiceConnection(), BIND_AUTO_CREATE);
 
         if (mBroadcastReceiver == null) {
             mBroadcastReceiver = new ShakeyReceiver(new ShakeyReceiver.Callback() {
@@ -235,6 +276,7 @@ public class ShakeyConnectActivity extends BaseActivity {
             mTimer.interrupt();
             loading.dismiss();
 
+            isDialogShowing = true;
             new OptionsDialog.Builder(ShakeyConnectActivity.this)
                     .setOptions(OptionsDialog.Options.YES)
                     .setTitle("등록 완료")
@@ -243,6 +285,7 @@ public class ShakeyConnectActivity extends BaseActivity {
                     .setOnClickListener(new OptionsDialog.OnClickListener() {
                         @Override
                         public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                            isDialogShowing = false;
                             dialog.dismiss();
                             ShakeyConnectActivity.this.finish();
                         }
@@ -251,7 +294,10 @@ public class ShakeyConnectActivity extends BaseActivity {
 
         } else if (message.equals("get_key_nack")) {
             loading.dismiss();
+            mTimer.interrupt();
             mBleService.disconnect();
+
+            isDialogShowing = true;
             new OptionsDialog.Builder(ShakeyConnectActivity.this)
                     .setTitle("등록 실패")
                     .setOptions(OptionsDialog.Options.YES)
@@ -260,6 +306,7 @@ public class ShakeyConnectActivity extends BaseActivity {
                     .setOnClickListener(new OptionsDialog.OnClickListener() {
                         @Override
                         public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                            isDialogShowing = false;
                             dialog.dismiss();
                         }
                     })
@@ -270,8 +317,10 @@ public class ShakeyConnectActivity extends BaseActivity {
     private void showFailedAlert() {
         if (!loading.isShowing()) return;
 
+        isDialogShowing = false;
         loading.dismiss();
 
+        isDialogShowing = true;
         new OptionsDialog.Builder(ShakeyConnectActivity.this)
                 .setOptions(OptionsDialog.Options.YES)
                 .setTitle("실패")
@@ -280,6 +329,7 @@ public class ShakeyConnectActivity extends BaseActivity {
                 .setOnClickListener(new OptionsDialog.OnClickListener() {
                     @Override
                     public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                        isDialogShowing = false;
                         dialog.dismiss();
                     }
                 }).show();
@@ -304,11 +354,11 @@ public class ShakeyConnectActivity extends BaseActivity {
         @Override
         public void run() {
             try {
-                for (int i = 0; i < 7; i++) {
+                for (int i = 0; i < 10; i++) {
                     if (isInterrupted()) return;
                     Thread.sleep(1000);
                 }
-
+                if (mBleService.isConnected()) mBleService.disconnect();
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
