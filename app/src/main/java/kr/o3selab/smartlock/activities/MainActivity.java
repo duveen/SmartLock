@@ -222,12 +222,29 @@ public class MainActivity extends BaseActivity {
             dialog.dismiss();
             closeMenu();
 
+            Shakey shakey = (Shakey) dialog.getExtras(Extras.SHAKEY);
+
             if (isShakeyConnected) {
+
+                if (mBleService.getConnectedBluetoothDevice().equals(shakey.getMac())) {
+                    new OptionsDialog.Builder(MainActivity.this)
+                            .setOptions(OptionsDialog.Options.YES)
+                            .setTitle("알림")
+                            .setMessage("이미 연결되어 있는 장치입니다.")
+                            .setOnClickListener(new OptionsDialog.OnClickListener() {
+                                @Override
+                                public void onClick(OptionsDialog dialog, OptionsDialog.ANSWER options) {
+                                    dialog.dismiss();
+                                }
+                            }).show();
+                    return;
+                }
+
                 mBleService.disconnect();
                 shakeyReceiverCallback.onDisconnect();
             }
 
-            mShakey = (Shakey) dialog.getExtras(Extras.SHAKEY);
+            mShakey = shakey;
             drawShakeyInfo(mShakey.getSecret());
 
             if (options.equals(OptionsDialog.ANSWER.YES)) {

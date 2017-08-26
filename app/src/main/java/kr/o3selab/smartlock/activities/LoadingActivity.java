@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import kr.o3selab.smartlock.R;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.common.utils.Utils;
-import kr.o3selab.smartlock.services.BLEService;
 import kr.o3selab.smartlock.services.FCMIDService;
 
 public class LoadingActivity extends BaseActivity {
@@ -92,9 +91,6 @@ public class LoadingActivity extends BaseActivity {
                 startActivity(new Intent(LoadingActivity.this, MainActivity.class));
 
                 FCMIDService.checkFCMToken(FirebaseInstanceId.getInstance().getToken());
-
-                Intent bleIntent = new Intent(LoadingActivity.this, BLEService.class);
-                startService(bleIntent);
             }
 
             LoadingActivity.this.finish();

@@ -34,10 +34,8 @@
         <activity android:name=".activities.RegisterActivity" />
         <activity android:name=".activities.ShakeyConnectActivity" />
         <activity android:name=".activities.MainActivity" />
-
         <activity android:name=".activities.SetupActivity" />
         <activity android:name=".activities.settings.AlertActivity" />
-
         <activity android:name=".activities.ShakeyInfoActivity" />
         <activity android:name=".activities.NoticeActivity" />
 
@@ -53,17 +51,14 @@
         <service
             android:name=".services.BTCTemplateService"
             android:configChanges="keyboardHidden|orientation|screenSize" />
-
         <service
             android:name=".services.BLEService"
             android:configChanges="keyboardHidden|orientation|screenSize" />
-
         <service android:name=".services.FCMService">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service android:name=".services.FCMIDService">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
@@ -76,6 +71,8 @@
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
+
+        <activity android:name=".activities.settings.AutoConnectActivity"></activity>
     </application>
 
 </manifest>

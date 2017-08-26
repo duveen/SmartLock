@@ -54,10 +54,10 @@
                 android:src="@drawable/ic_notice_black" />
 
             <TextView
+                android:id="@+id/textView2"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="20dp"
-                android:layout_marginRight="20dp"
                 android:layout_weight="1"
                 android:gravity="center_vertical"
                 android:text="공지사항" />
@@ -87,6 +87,48 @@
                 android:layout_weight="4"
                 android:gravity="center_vertical"
                 android:text="알람설정" />
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="right"
+                android:padding="5dp"
+                android:src="@drawable/ic_arrow_right"
+                android:tint="@color/grey_400"/>
+
+        </LinearLayout>
+
+        <include layout="@layout/line" />
+
+        <LinearLayout
+            android:id="@+id/setting_auto_connect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:selectableItemBackground"
+            android:clickable="true"
+            android:orientation="horizontal"
+            android:padding="15dp">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ic_bluetooth_connected" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="20dp"
+                android:layout_weight="4"
+                android:gravity="center_vertical"
+                android:text="자동연결" />
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_gravity="right"
+                android:padding="5dp"
+                android:src="@drawable/ic_arrow_right"
+                android:tint="@color/grey_400"/>
 
         </LinearLayout>
 

@@ -197,6 +197,10 @@ public class BLEService extends Service {
         return isConnectState;
     }
 
+    public String getConnectedBluetoothDevice() {
+        return mBluetoothGatt.getDevice().getAddress();
+    }
+
     /**
      * After using a given BLE device, the app must call this method to ensure resources are
      * released properly.

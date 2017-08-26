@@ -1,5 +1,6 @@
 package kr.o3selab.smartlock.models;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.Serializable;
@@ -34,6 +35,18 @@ public class Shakey implements Serializable {
 
     public Shakey() {
 
+    }
+
+    public Shakey(String json) throws JSONException {
+        JSONObject item = new JSONObject(json);
+
+        owner = item.optString("owner", "");
+        ownerEmail = item.optString("ownerEmail", "");
+        secret = item.optString("secret", "");
+        name = item.optString("name", "");
+        mac = item.optString("mac", "");
+        regdate = item.optLong("regdate", 0);
+        lastOpen = item.optLong("lastOpen", 0);
     }
 
     @Override
