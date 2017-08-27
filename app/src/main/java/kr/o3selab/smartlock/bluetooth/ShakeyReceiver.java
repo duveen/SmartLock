@@ -37,6 +37,10 @@ public class ShakeyReceiver extends BroadcastReceiver {
 
     }
 
+    public Callback getCallback() {
+        return callback;
+    }
+
     public interface Callback {
         void onConnect();
 

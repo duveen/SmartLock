@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/custom_dialog"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -14,24 +15,57 @@
             android:id="@+id/custom_dialog_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_gravity="left"
+            android:layout_marginLeft="25dp"
+            android:layout_marginRight="25dp"
             android:layout_marginTop="25dp"
+            android:textColor="@color/black"
             android:textSize="@dimen/font_title"
-            android:visibility="gone"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:visibility="gone" />
 
-        <TextView
-            android:id="@+id/custom_dialog_content"
-            android:layout_width="wrap_content"
+        <FrameLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
             android:layout_marginBottom="15dp"
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
-            android:layout_marginTop="25dp"
-            android:textAlignment="center"
-            android:textColor="@color/bootstrap_gray_dark"
-            android:textSize="@dimen/font_subheading" />
+            android:layout_marginTop="25dp">
+
+            <TextView
+                android:id="@+id/custom_dialog_content_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textAlignment="center"
+                android:textColor="@color/bootstrap_gray_dark"
+                android:textSize="@dimen/font_subheading"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/custom_dialog_content_edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/bootstrap_gray_dark"
+                android:textSize="@dimen/font_subheading"
+                android:visibility="gone" />
+
+            <org.adw.library.widgets.discreteseekbar.DiscreteSeekBar
+                android:id="@+id/custom_dialog_content_seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                android:layout_marginTop="15dp"
+                android:visibility="gone"
+                app:dsb_indicatorColor="@color/colorPrimary"
+                app:dsb_indicatorPopupEnabled="true"
+                app:dsb_max="5"
+                app:dsb_min="1"
+                app:dsb_progressColor="@color/colorPrimary"
+                app:dsb_value="3" />
+
+        </FrameLayout>
 
         <FrameLayout
             android:layout_width="match_parent"

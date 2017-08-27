@@ -16,22 +16,23 @@ import android.support.annotation.RequiresApi;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Vector;
 
 import kr.o3selab.smartlock.common.utils.Debug;
 
 public class BLEHelper {
 
-    public static String shortUuidFormat = "0000%04X-0000-1000-8000-00805F9B34FB";
+    private static String shortUuidFormat = "0000%04X-0000-1000-8000-00805F9B34FB";
 
     public static UUID sixteenBitUuid(long shortUuid) {
         assert shortUuid >= 0 && shortUuid <= 0xFFFF;
         return UUID.fromString(String.format(shortUuidFormat, shortUuid & 0xFFFF));
     }
 
-    public static final int BLE_STATUS_SUCCESS = 0;
+    private static final int BLE_STATUS_SUCCESS = 0;
 
-    public static final int BLE_NOT_SUPPORT = 1;
-    public static final int BLE_NOT_ENABLED = 2;
+    private static final int BLE_NOT_SUPPORT = 1;
+    private static final int BLE_NOT_ENABLED = 2;
 
     private static volatile BLEHelper instance;
 
@@ -49,10 +50,12 @@ public class BLEHelper {
     private ScanCallback scanCallback;
     private BluetoothAdapter.LeScanCallback leScanCallback;
 
+    private Vector<String> mSearchList;
+
     private boolean isScanning = false;
 
     public BLEHelper() {
-
+        mSearchList = new Vector<>();
     }
 
     public void init(Context context) {
@@ -65,6 +68,8 @@ public class BLEHelper {
         if (isSuccess(context) != BLE_STATUS_SUCCESS) {
             return;
         }
+
+        mSearchList.clear();
 
         isScanning = true;
 
@@ -128,8 +133,13 @@ public class BLEHelper {
         scanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
-                listener.onFind(result.getDevice());
-                Debug.d("LEScanner : " + result.getDevice().getAddress() + ", " + result.getDevice().getName());
+                BluetoothDevice findDevice = result.getDevice();
+
+                Debug.d("LEScanner : " + findDevice.getAddress() + ", " + findDevice.getName());
+                if (mSearchList.contains(findDevice.getAddress())) return;
+
+                mSearchList.add(findDevice.getAddress());
+                listener.onFind(findDevice);
             }
 
             @Override

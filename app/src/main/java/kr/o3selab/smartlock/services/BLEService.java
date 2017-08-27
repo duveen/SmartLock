@@ -18,11 +18,15 @@ import android.content.IntentFilter;
 import android.os.Binder;
 import android.os.IBinder;
 
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.UUID;
 
 import kr.o3selab.smartlock.bluetooth.BLEHelper;
 import kr.o3selab.smartlock.bluetooth.ShakeyReceiver;
+import kr.o3selab.smartlock.common.AppConfig;
 import kr.o3selab.smartlock.common.utils.Debug;
+import kr.o3selab.smartlock.models.Shakey;
 
 public class BLEService extends Service {
 
@@ -33,6 +37,8 @@ public class BLEService extends Service {
     private BluetoothGattService mBluetoothGattService;
 
     private BroadcastReceiver mShakeyReceiver;
+    private FirebaseUser mUser;
+    private Shakey mShakey;
 
     public static final String BLE_CONNECTED = "kr.o3selab.BLE_CONNECTED";
     public static final String BLE_DISCONNECTED = "kr.o3selab.BLE_DISCONNECTED";
@@ -47,12 +53,16 @@ public class BLEService extends Service {
 
     private boolean isConnectState = false;
 
+    private Thread mMonitorThread;
+    private boolean isMonitoring = false;
+
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 mBluetoothGatt.discoverServices();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Debug.d("BLE Disconnected");
                 isConnectState = false;
                 broadcastUpdate(BLE_DISCONNECTED);
             }
@@ -63,6 +73,7 @@ public class BLEService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 mBluetoothGattService = gatt.getService(UUID_SERVICE);
                 if (mBluetoothGattService == null) {
+                    broadcastUpdate(BLE_DISCONNECTED);
                     Debug.e("BLE GATT service not found!");
                     return;
                 }
@@ -83,6 +94,7 @@ public class BLEService extends Service {
                 }
 
                 BLEHelper.getInstance().setGattInfo(mBluetoothGatt, mBluetoothGattService);
+                Debug.d("BLE Connected");
                 isConnectState = true;
                 broadcastUpdate(BLE_CONNECTED);
             }
@@ -91,12 +103,14 @@ public class BLEService extends Service {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                Debug.d("BLE Data Available");
                 broadcastUpdate(BLE_DATA_AVAILABLE, characteristic);
             }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+            Debug.d("BLE Data Available");
             broadcastUpdate(BLE_DATA_AVAILABLE, characteristic);
         }
     };
@@ -136,6 +150,7 @@ public class BLEService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        initialize();
         Debug.d("onCreate");
     }
 
@@ -160,6 +175,11 @@ public class BLEService extends Service {
             return false;
         }
 
+        if (AppConfig.getInstance().isAutoStart() && AppConfig.getInstance().getAutoConnectedDevice() != null) {
+            mShakey = AppConfig.getInstance().getAutoConnectedDevice();
+            startMonitorSystem();
+        }
+
         return true;
     }
 
@@ -179,7 +199,6 @@ public class BLEService extends Service {
         Debug.d("Trying to create a new connection.");
         mBluetoothDeviceAddress = address;
 
-        if (mShakeyReceiver != null) registerReceiver();
         return true;
     }
 
@@ -188,8 +207,7 @@ public class BLEService extends Service {
             Debug.w("BluetoothAdapter not initialized");
             return;
         }
-
-        if (mShakeyReceiver != null) unregisterReceiver();
+        isConnectState = false;
         mBluetoothGatt.disconnect();
     }
 
@@ -241,6 +259,46 @@ public class BLEService extends Service {
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
+    public void startMonitorSystem() {
+        if (mMonitorThread != null) return;
+
+        mMonitorThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Debug.d("Start Monitor System");
+
+                while (true) {
+                    if (mMonitorThread.isInterrupted()) {
+                        Debug.d("Stop Monitor System");
+                        return;
+                    }
+                    Debug.d("Service Check");
+                    if (!isConnected()) connect(mShakey.getMac());
+
+                    try {
+                        Thread.sleep(1000 * 60);
+                    } catch (InterruptedException e) {
+                        Debug.d("Stop Monitor System");
+                        return;
+                    }
+                }
+            }
+        });
+        mMonitorThread.start();
+        isMonitoring = true;
+    }
+
+    public void stopMonitorSystem() {
+        if (mMonitorThread == null) return;
+        mMonitorThread.interrupt();
+        mMonitorThread = null;
+        isMonitoring = false;
+    }
+
+    public boolean isMonitoring() {
+        return isMonitoring;
+    }
+
     public void setShakeyReceiver(ShakeyReceiver receiver) {
         mShakeyReceiver = receiver;
     }
@@ -259,5 +317,21 @@ public class BLEService extends Service {
         filter.addAction(BLE_DISCONNECTED);
         filter.addAction(BLE_DATA_AVAILABLE);
         return filter;
+    }
+
+    public void setShakey(Shakey shakey) {
+        mShakey = shakey;
+    }
+
+    public Shakey getShakey() {
+        return mShakey;
+    }
+
+    public void setUser(FirebaseUser user) {
+        mUser = user;
+    }
+
+    public FirebaseUser getUser() {
+        return mUser;
     }
 }

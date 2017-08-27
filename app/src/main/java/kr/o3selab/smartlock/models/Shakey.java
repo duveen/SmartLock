@@ -1,5 +1,13 @@
 package kr.o3selab.smartlock.models;
 
+import android.support.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.FirebaseDatabase;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -13,7 +21,7 @@ import java.util.Random;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-import kr.o3selab.smartlock.common.ByteArrayBuffer;
+import kr.o3selab.smartlock.common.utils.ByteArrayBuffer;
 import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.common.utils.HexAsciiHelper;
 
@@ -21,8 +29,11 @@ public class Shakey implements Serializable {
 
     private static String REQUEST_SECRET_KEY = "K0";
     private static String RESPONSE_RECEIVE_SECRET_KEY = "K1";
+
     private static String REQUEST_UNLOCK = "R0";
     private static String REQUEST_RESET = "R1";
+    private static String REQUEST_SENS_VALUE = "R2";
+
     private static String SET_SENS_VALUE = "S0";
 
     private String owner;
@@ -170,16 +181,31 @@ public class Shakey implements Serializable {
         return RESPONSE_RECEIVE_SECRET_KEY.getBytes();
     }
 
+    public void updateShakey() {
+        updateShakey(new ShakeyUpdateListener());
+    }
+
+    public void updateShakey(ShakeyUpdateListener listener) {
+        FirebaseDatabase.getInstance().getReference("Shakeys/" + secret).setValue(this).addOnSuccessListener(listener).addOnFailureListener(listener);
+    }
+
     public byte[] unlockCommand() {
         // String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
         // return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
 
-        return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK.getBytes()).append("00".getBytes()).append(getSecret().getBytes()).toByteArray();
+        return ByteArrayBuffer.getBuffer().append(REQUEST_UNLOCK).append(getSecret()).toByteArray();
+    }
+
+    public byte[] readSensValueCommand() {
+        return ByteArrayBuffer.getBuffer().append(REQUEST_SENS_VALUE).toByteArray();
+    }
+
+    public byte[] writeSensValueCommand(int value) {
+        return ByteArrayBuffer.getBuffer().append(SET_SENS_VALUE).append(value).toByteArray();
     }
 
     public byte[] resetCommand() {
-        String publicKey = String.format(Locale.KOREA, "%02d", new Random().nextInt(100));
-        return ByteArrayBuffer.getBuffer().append(REQUEST_RESET.getBytes()).append(publicKey.getBytes()).append(getENCSecretKey(publicKey)).toByteArray();
+        return ByteArrayBuffer.getBuffer().append(REQUEST_RESET).append(secret).toByteArray();
     }
 
     private static String toDate(Long time) {
@@ -187,5 +213,26 @@ public class Shakey implements Serializable {
 
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.KOREA);
         return sdf.format(new Date(time));
+    }
+
+    public static class ShakeyUpdateListener implements OnSuccessListener, OnFailureListener {
+
+        public void onSuccessed(Object o) {
+
+        }
+
+        public void onFailed(Exception e) {
+
+        }
+
+        @Override
+        public void onFailure(@NonNull Exception e) {
+            onFailed(e);
+        }
+
+        @Override
+        public void onSuccess(Object o) {
+            onSuccessed(o);
+        }
     }
 }

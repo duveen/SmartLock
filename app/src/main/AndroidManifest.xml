@@ -32,25 +32,17 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.RegisterActivity" />
-        <activity android:name=".activities.ShakeyConnectActivity" />
+        <activity android:name=".activities.DeviceAddActivity" />
         <activity android:name=".activities.MainActivity" />
         <activity android:name=".activities.SetupActivity" />
         <activity android:name=".activities.settings.AlertActivity" />
-        <activity android:name=".activities.ShakeyInfoActivity" />
+        <activity android:name=".activities.DeviceInfoActivity" />
         <activity android:name=".activities.NoticeActivity" />
-
-        <!-- 로그인 부분 -->
-        <activity
-            android:name="com.nhn.android.naverlogin.ui.OAuthLoginActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity
-            android:name="com.nhn.android.naverlogin.ui.OAuthLoginInAppBrowserActivity"
-            android:label="OAuth2.0 In-app" />
+        <activity android:name=".activities.settings.AutoConnectActivity" />
+        <activity android:name=".activities.DeviceShareActivity" />
+        <activity android:name=".activities.FindUserActivity" />
 
         <!-- 서비스 -->
-        <service
-            android:name=".services.BTCTemplateService"
-            android:configChanges="keyboardHidden|orientation|screenSize" />
         <service
             android:name=".services.BLEService"
             android:configChanges="keyboardHidden|orientation|screenSize" />
@@ -65,14 +57,9 @@
             </intent-filter>
         </service>
 
-        <!-- 브로드 캐스트 리시버 -->
-        <receiver android:name=".services.ServiceMonitoring$ServiceMonitoringBR" />
-
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
-
-        <activity android:name=".activities.settings.AutoConnectActivity"></activity>
     </application>
 
 </manifest>

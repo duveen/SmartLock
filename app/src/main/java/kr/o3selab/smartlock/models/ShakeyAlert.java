@@ -33,7 +33,6 @@ public class ShakeyAlert {
 
     private String mAlertUrl;
 
-
     private ShakeyAlert() {
         mAlertUrl = "https://fcm.googleapis.com/fcm/send";
     }

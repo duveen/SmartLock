@@ -8,7 +8,10 @@ import android.support.annotation.StringRes;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
+
+import org.adw.library.widgets.discreteseekbar.DiscreteSeekBar;
 
 import java.util.HashMap;
 
@@ -25,8 +28,12 @@ public class OptionsDialog extends Dialog {
 
     @BindView(R.id.custom_dialog_title)
     TextView mTitleView;
-    @BindView(R.id.custom_dialog_content)
-    TextView mContentView;
+    @BindView(R.id.custom_dialog_content_text)
+    TextView mContentTextView;
+    @BindView(R.id.custom_dialog_content_edit_text)
+    EditText mContentEditTextView;
+    @BindView(R.id.custom_dialog_content_seekbar)
+    DiscreteSeekBar mContentSeekbar;
     @BindView(R.id.custom_dialog_yes)
     TextView mYesTextView;
     @BindView(R.id.custom_dialog_no)
@@ -41,6 +48,11 @@ public class OptionsDialog extends Dialog {
             dialog = new OptionsDialog(context);
         }
 
+        public Builder setType(int type) {
+            dialog.setType(type);
+            return this;
+        }
+
         public Builder setTitle(String title) {
             dialog.setTitle(title);
             return this;
@@ -51,13 +63,38 @@ public class OptionsDialog extends Dialog {
             return this;
         }
 
-        public Builder putExtras(String key, Object value) {
-            dialog.putExtras(key, value);
+        public Builder setMessage(@StringRes int resId) {
+            dialog.setMessage(resId);
             return this;
         }
 
-        public Builder setMessage(@StringRes int resId) {
-            dialog.setMessage(resId);
+        public Builder setHint(String hint) {
+            dialog.setHint(hint);
+            return this;
+        }
+
+        public Builder setInputType(int inputType) {
+            dialog.setInputType(inputType);
+            return this;
+        }
+
+        public Builder setSeekbarMin(int min) {
+            dialog.setMin(min);
+            return this;
+        }
+
+        public Builder setSeekbarMax(int max) {
+            dialog.setMax(max);
+            return this;
+        }
+
+        public Builder setSeekbarValue(int value) {
+            dialog.setValue(value);
+            return this;
+        }
+
+        public Builder putExtras(String key, Object value) {
+            dialog.putExtras(key, value);
             return this;
         }
 
@@ -85,6 +122,10 @@ public class OptionsDialog extends Dialog {
         }
     }
 
+    public static final int TEXT_TYPE = 0;
+    public static final int EDIT_TEXT_TYPE = 1;
+    public static final int SEEK_BAR_TYPE = 2;
+
     private OptionsDialog(@NonNull Context context) {
         super(context);
 
@@ -103,6 +144,15 @@ public class OptionsDialog extends Dialog {
         }
 
         extras = new HashMap<>();
+
+        setType(TEXT_TYPE);
+        setOptions(Options.YES);
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(OptionsDialog dialog, ANSWER options) {
+                dialog.dismiss();
+            }
+        });
     }
 
     @Override
@@ -118,6 +168,31 @@ public class OptionsDialog extends Dialog {
         mTitleView.setText(title);
     }
 
+    private void setType(Integer type) {
+        switch (type) {
+            case TEXT_TYPE:
+                mContentTextView.setVisibility(View.VISIBLE);
+                mContentEditTextView.setVisibility(View.GONE);
+                mContentSeekbar.setVisibility(View.GONE);
+                break;
+            case EDIT_TEXT_TYPE:
+                mContentTextView.setVisibility(View.GONE);
+                mContentEditTextView.setVisibility(View.VISIBLE);
+                mContentSeekbar.setVisibility(View.GONE);
+                break;
+            case SEEK_BAR_TYPE:
+                mContentTextView.setVisibility(View.GONE);
+                mContentEditTextView.setVisibility(View.GONE);
+                mContentSeekbar.setVisibility(View.VISIBLE);
+                break;
+            default:
+                mContentTextView.setVisibility(View.GONE);
+                mContentEditTextView.setVisibility(View.GONE);
+                mContentSeekbar.setVisibility(View.GONE);
+                break;
+        }
+    }
+
     private void putExtras(String key, Object value) {
         extras.put(key, value);
     }
@@ -127,11 +202,39 @@ public class OptionsDialog extends Dialog {
     }
 
     private void setMessage(@Nullable CharSequence message) {
-        mContentView.setText(message);
+        mContentTextView.setText(message);
     }
 
     private void setMessage(@StringRes int resId) {
-        mContentView.setText(resId);
+        mContentTextView.setText(resId);
+    }
+
+    private void setHint(@Nullable CharSequence hint) {
+        mContentEditTextView.setHint(hint);
+    }
+
+    private void setInputType(int inputType) {
+        mContentEditTextView.setInputType(inputType);
+    }
+
+    public String getEditTextMessage() {
+        return mContentEditTextView.getText().toString();
+    }
+
+    private void setMin(int min) {
+        mContentSeekbar.setMin(min);
+    }
+
+    private void setMax(int max) {
+        mContentSeekbar.setMax(max);
+    }
+
+    private void setValue(int value) {
+        mContentSeekbar.setProgress(value);
+    }
+
+    public DiscreteSeekBar getSeekbar() {
+        return mContentSeekbar;
     }
 
     private void setOnClickListener(OnClickListener listener) {

@@ -10,10 +10,16 @@ import com.google.firebase.database.IgnoreExtraProperties;
 @IgnoreExtraProperties
 public class ShakeyShare {
 
+    public static final int TYPE_ONE = 1;
+    public static final int TYPE_THREE = 2;
+    public static final int TYPE_FIVE = 3;
+    public static final int TYPE_TEN = 10;
+    public static final int TYPE_UNLIMITED = Integer.MAX_VALUE;
+
     private String sid;
     private String from;
     private String to;
-    private Integer type;
+    private Integer remain;
 
     @Exclude
     private Shakey shakey;
@@ -48,12 +54,29 @@ public class ShakeyShare {
         this.to = to;
     }
 
-    public Integer getType() {
-        return type;
+    public Integer getRemain() {
+        return remain;
     }
 
-    public void setType(Integer type) {
-        this.type = type;
+    public void setRemain(Integer remain) {
+        this.remain = remain;
+    }
+
+    public static int getRemainFromIndex(int index) {
+        switch (index) {
+            case 0:
+                return TYPE_ONE;
+            case 1:
+                return TYPE_THREE;
+            case 2:
+                return TYPE_FIVE;
+            case 3:
+                return TYPE_TEN;
+            case 4:
+                return TYPE_UNLIMITED;
+            default:
+                return TYPE_UNLIMITED;
+        }
     }
 
     public void setCallback(ShakeyCallBack callback) {

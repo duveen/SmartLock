@@ -1,4 +1,4 @@
-package kr.o3selab.smartlock.common;
+package kr.o3selab.smartlock.common.utils;
 
 import java.util.Vector;
 
@@ -16,6 +16,16 @@ public class ByteArrayBuffer {
 
     public ByteArrayBuffer append(byte[] bytes) {
         for (byte b : bytes) buffer.add(b);
+        return this;
+    }
+
+    public ByteArrayBuffer append(String string) {
+        append(string.getBytes());
+        return this;
+    }
+
+    public ByteArrayBuffer append(int value) {
+        append(String.valueOf(value).getBytes());
         return this;
     }
 

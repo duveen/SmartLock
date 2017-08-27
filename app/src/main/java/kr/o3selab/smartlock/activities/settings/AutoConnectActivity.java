@@ -1,11 +1,16 @@
 package kr.o3selab.smartlock.activities.settings;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.TextView;
+
+import java.util.HashMap;
+import java.util.Vector;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,6 +32,10 @@ public class AutoConnectActivity extends AppCompatActivity {
     View mOptions2Background;
     @BindView(R.id.setting_auto_connect_option2_text)
     TextView mOptions2Text;
+
+    private Vector<Shakey> shakeys;
+    private HashMap<String, Shakey> items;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +76,27 @@ public class AutoConnectActivity extends AppCompatActivity {
     @OnClick(R.id.setting_auto_connect_option2)
     void options2() {
 
+        shakeys = AppConfig.getInstance().getShakeys();
+        items = new HashMap<>();
+
+        for (Shakey shakey : shakeys) {
+            items.put(shakey.getName(), shakey);
+        }
+
+        final String[] list = new String[items.size()];
+        new AlertDialog.Builder(this)
+                .setItems(items.keySet().toArray(list), new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                        Shakey shakey = items.get(list[which]);
+
+                        AppConfig.getInstance().setAutoConnectedDevice(shakey);
+                        mOptions2Text.setText(shakey.getName());
+                    }
+                })
+                .setCancelable(true)
+                .show();
     }
 
     @OnClick(R.id.setting_auto_connect_back)

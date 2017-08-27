@@ -31,9 +31,9 @@ import kr.o3selab.smartlock.common.utils.Debug;
 import kr.o3selab.smartlock.models.Shakey;
 import kr.o3selab.smartlock.models.ShakeyLog;
 
-public class ShakeyInfoActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
+public class DeviceInfoActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
 
-    public static final String TAG = "ShakeyInfoActivity";
+    public static final String TAG = "DeviceInfoActivity";
 
     private FirebaseUser mUser;
     private DatabaseReference mReference;
@@ -111,7 +111,7 @@ public class ShakeyInfoActivity extends BaseActivity implements SwipeRefreshLayo
                     View view = getLayoutInflater().inflate(R.layout.item_shakey_log, null);
                     if (!log.getWho().equals(mUser.getUid())) {
                         View background = view.findViewById(R.id.shakey_log);
-                        background.setBackgroundColor(ContextCompat.getColor(ShakeyInfoActivity.this, R.color.green_100));
+                        background.setBackgroundColor(ContextCompat.getColor(DeviceInfoActivity.this, R.color.green_100));
                     }
 
                     TextView emailView = (TextView) view.findViewById(R.id.shakey_log_who);
